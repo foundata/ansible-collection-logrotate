@@ -1,0 +1,41 @@
+{#-
+  Render a logrotate section to a drop-in configuration file.
+
+  Input variable: tpl_section_conf (dict)
+
+  Rules:
+  - Special key "content": output raw, skip all other processing.
+  - "path" key (required unless "content"): log file path(s) or glob(s).
+    Paths containing spaces are automatically quoted while preserving glob
+    expansion (glob characters *, ?, [ ] remain unquoted).
+  - Boolean true values render as bare directives (no argument).
+  - Boolean false values are silently skipped.
+  - Script block directives (prerotate, postrotate, firstaction, lastaction,
+    preremove) render with indented content and closing "endscript".
+  - All other keys render as "directive value".
+-#}
+{%- from '_logrotate_macros.j2' import directives -%}
+
+# {{ ansible_managed }}
+{%  set conf = tpl_section_conf | ansible.builtin.default({}) %}
+{%  set raw_content = (conf.get('content') if conf is mapping else none) %}
+
+{%- if raw_content is not none %}
+{{ raw_content | string | ansible.builtin.trim }}
+{%  else %}
+{%    set paths = conf.get('path', conf.get('paths', [])) %}
+{%    if paths is string %}
+{%      set paths = [paths] %}
+{%    endif %}
+{%    set ns = namespace(quoted_paths=[]) %}
+{%    for p in paths %}
+{%      if ' ' in p %}
+{%        set ns.quoted_paths = ns.quoted_paths
+            + [p | regex_replace('([^*?\\[\\]]+)', '"\\1"')] %}
+{%      else %}
+{%        set ns.quoted_paths = ns.quoted_paths + [p] %}
+{%      endif %}
+{%    endfor %}
+{{ ns.quoted_paths | join(' ') }} {
+{{ directives(conf, indent='  ', exclude=['path', 'paths', 'content']) }}}
+{%  endif %}

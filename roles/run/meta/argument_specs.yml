@@ -1,0 +1,152 @@
+# Role argument validation.
+#
+# See defaults/main.yml for details on each variable. For more information on
+# the argument_specs.yml format, refer to the official Ansible documentation:
+# https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html#role-argument-validation
+
+---
+
+argument_specs:
+
+  # foundata.logrotate/roles/run/tasks/main.yml entry point
+  main:
+    short_description: "Main entry point for the foundata.logrotate.run role"
+    options:
+
+      run_logrotate_state:
+        description: |
+          Determines whether the managed resources should be `present` or `absent`.
+
+          `present` ensures that required components, such as software packages, are
+          installed and configured.
+
+          `absent` reverts changes as much as possible, such as removing packages,
+          deleting created users, stopping services, restoring modified settings, …
+        type: "str"
+        default: "present"
+        choices:
+          - "present"
+          - "absent"
+
+      run_logrotate_autoupgrade:
+        description: |
+          If set to `true`, all managed packages will be upgraded during each Ansible
+          run (e.g., when the package provider detects a newer version than the
+          currently installed one).
+        type: "bool"
+        default: false
+
+      run_logrotate_config_defaults:
+        description: |
+          Global logrotate default directives for all sections.
+
+          This dictionary defines logrotate directives that apply globally and are
+          written to the drop-in file specified by
+          `run_logrotate_config_defaults_dropin_file_name` in
+          `<config dir>/logrotate.d/`.
+
+          All standard logrotate directives may be used as keys. Use `true` as the value
+          for directives that take no arguments. No log file paths must be specified
+          here.
+
+          These defaults provide baseline behavior for all rotation sections and may be
+          overridden by later drop-in configuration files or by per-section directives
+          defined in `run_logrotate_config_sections`.
+
+          Using a drop-in for also for global defaults avoids modifying
+          `/etc/logrotate.conf` and provides a safe way to customize or replace platform
+          defaults.
+        type: "dict"
+        default: {}
+
+      run_logrotate_config_defaults_dropin_file_name:
+        description: |
+          Filename of the drop-in configuration file placed in
+          `<config dir>/logrotate.d/` to define global defaults. Defaults to
+          `00-defaults`. The `00-` prefix ensures the file is loaded early, allowing
+          its settings be overridden by later configuration files.
+
+          If a non-default filename is used, any existing
+          `<config dir>/logrotate.d/00-defaults` from previous Ansible runs will be
+          removed automatically to prevent conflicts.
+        type: "str"
+        default: "00-defaults"
+
+      run_logrotate_config_sections:
+        description: |
+          Log rotation section definitions. Each section creates a drop-in configuration
+          file in `<config dir>/logrotate.d/`.
+
+          Dictionary structure:
+
+          - Keys: Section name (will create `<config dir>/logrotate.d/<name>`)
+          - Values: Dictionary containing path(s) and rotation directives. All standard
+            logrotate directives may be used as keys.
+
+          Required keys per rule:
+
+          - `path`: Log file path(s) or glob to rotate. Can be a string (single path or
+            glob) or a list of paths/globs. Paths are automatically quoted when needed
+            without preventing glob expansion. `paths` can be used as alias of the key.
+
+          Special cases:
+
+          - Use `true` as the value for logrotate directives that take no arguments.
+          - There is a `content` key, allowing you to put raw lines for the drop-in file
+            as the value without any special treatment. This is useful if you already have
+            existing configuration and do not want to convert their definitions into YAML:
+            ```yaml
+            my-complex-logrotate:
+              content: |
+                /var/log/app1/*.log "/var/log/app2 space/"*".log" {
+                  daily
+                  rotate 14
+                  compress
+                  postrotate
+                    systemctl reload my-app > /dev/null 2>&1 || true
+                  endscript
+                }
+
+          Example:
+
+          ```yaml
+          my_app:
+            path:
+              - "/var/log/app1/*.log"
+              - "/var/log/app2 space/*.log"
+            daily: true                  # Rotation frequency
+            rotate: 14                   # Keep 14 rotated files
+            compress: true               # Compress rotated files
+            delaycompress: true          # Wait one cycle before compressing
+            missingok: true              # Don't error if file missing
+            notifempty: true             # Don't rotate empty files
+            create: "0640 www-data adm"  # Create new file with these permissions
+            sharedscripts: true          # Run scripts once, not per-file
+            postrotate: |                # Script block
+              systemctl reload my-app > /dev/null 2>&1 || true
+          ```
+
+          will create `logrotate.d/my_app` with the content:
+
+          ```
+          /var/log/app1/*.log "/var/log/app2 space/"*".log" {
+            daily
+            rotate 14
+            compress
+            delaycompress
+            missingok
+            notifempty
+            create 0640 www-data adm
+            sharedscripts
+            postrotate
+              systemctl reload my-app > /dev/null 2>&1 || true
+            endscript
+          }
+          ```
+
+          The official documentation provides general configuration guidance:
+
+          - [`man logrotate`](https://manpages.debian.org/testing/logrotate/logrotate.8.en.html)
+          - [Configuration file directives](https://manpages.debian.org/testing/logrotate/logrotate.8.en.html#CONFIGURATION_FILE_DIRECTIVES)
+        type: "dict"
+        default: {}

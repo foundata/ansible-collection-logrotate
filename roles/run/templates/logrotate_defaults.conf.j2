@@ -1,0 +1,28 @@
+{#-
+  Render global logrotate default directives to a drop-in configuration file.
+
+  Input variable: tpl_defaults_conf (dict)
+
+  Rules:
+  - No log file paths or block braces are rendered.
+  - Special key "content": output raw, skip all other processing.
+  - Boolean true values render as bare directives (no argument).
+  - Boolean false values are silently skipped.
+  - Script block directives (prerotate, postrotate, firstaction, lastaction,
+    preremove) render with indented content and closing "endscript".
+  - All other keys render as "directive value".
+-#}
+{%- from '_logrotate_macros.j2' import directives -%}
+
+# {{ ansible_managed }}
+{%  set conf = tpl_defaults_conf | ansible.builtin.default({}) %}
+{%  set raw_content = (conf.get('content') if conf is mapping else none) %}
+
+{%- if raw_content is not none %}
+{{ raw_content | string | ansible.builtin.trim }}
+{%  elif (conf | ansible.builtin.length) == 0 %}
+
+# No global logrotate defaults managed by Ansible.
+{%  else %}
+{{ directives(conf, exclude=['content']) | ansible.builtin.regex_replace('\\s+$', '') }}
+{%  endif %}

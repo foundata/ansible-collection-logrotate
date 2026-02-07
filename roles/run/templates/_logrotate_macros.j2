@@ -1,0 +1,37 @@
+{#- Render a single logrotate directive. -#}
+{%- macro directive(k, v, indent='') -%}
+{%   set script_directives = [ 'prerotate',
+                               'postrotate',
+                               'firstaction',
+                               'lastaction',
+                               'preremove'] -%}
+{%   if k in script_directives %}
+{{ indent }}{{ k }}
+{%     for line in (v | string | ansible.builtin.trim).splitlines() %}
+{{ indent }}    {{ line }}
+{%     endfor -%}
+{{ indent }}endscript
+{%-  elif v is sameas true %}
+{{ indent }}{{ k }}
+{%-  elif v is sameas false %}
+{#   Silently skip disabled (false) directives. #}
+{%-  else %}
+{%     if v is string and '\n' in v %}
+{{       undef(hint='Directive "' ~ k ~ '" has a multiline value but is not a'
+         ~ ' recognized script directive. Valid script directives: '
+         ~ script_directives | join(', ') ~ '. Check for typos.') }}
+{%     endif %}
+{{ indent }}{{ k }} {{ v }}
+{%-  endif %}
+{%- endmacro -%}
+
+{#- Render a sorted list of directives from a dict (excluding given keys). -#}
+{%- macro directives(conf, indent='', exclude=[]) -%}
+{%   for item in ((conf
+                   | ansible.builtin.dict2items
+                   | ansible.builtin.rejectattr('key', 'in', exclude)
+                   | ansible.builtin.rejectattr('value', 'sameas', false)
+                   | ansible.builtin.sort(attribute='key'))) %}
+{{ directive(item['key'], item['value'], indent) }}
+{%   endfor %}
+{%- endmacro -%}
