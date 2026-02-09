@@ -94,7 +94,7 @@ __run_logrotate_config_defaults_dropin_file_path_default: "{{ __run_logrotate_co
 
 
 # Paths of executables for management and validation.
-__run_logrotate_logrotate_exec_path: "/usr/bin/logrotate"
+__run_logrotate_logrotate_exec_path: "/usr/sbin/logrotate"
 
 
 ### Override defaults of dependencies used by this role (if any).
