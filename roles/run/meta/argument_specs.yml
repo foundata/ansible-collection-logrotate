@@ -87,7 +87,7 @@ argument_specs:
 
           - `path`: Log file path(s) or glob to rotate. Can be a string (single path or
             glob) or a list of paths/globs. Paths are automatically quoted when needed
-            without preventing glob expansion. `paths` can be used as alias of the key.
+            without preventing glob expansion. `paths` can be used as alias.
 
           Special cases:
 

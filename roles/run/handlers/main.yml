@@ -1,0 +1,18 @@
+# Handlers: Tasks that are triggered and run only when notified.
+
+---
+
+- name: "Handlers | Validate logrotate configuration"
+  ansible.builtin.command:
+    argv:
+      - "{{ __run_logrotate_logrotate_exec_path }}"
+      - "--debug"
+      - "--verbose"
+      - "{{ __run_logrotate_config_file_path }}"
+  register: __run_logrotate_validation_result
+  changed_when:
+    - false
+  failed_when:
+    - __run_logrotate_validation_result is ansible.builtin.failed
+  listen:
+    - "run_logrotate: validate configuration"

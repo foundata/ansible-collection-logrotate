@@ -92,6 +92,11 @@ __run_logrotate_config_dropin_file_mode: "{{ __run_logrotate_config_file_mode }}
 __run_logrotate_config_defaults_dropin_file_path: "{{ __run_logrotate_config_dropin_dir_path }}/{{ run_logrotate_config_defaults_dropin_file_name }}"
 __run_logrotate_config_defaults_dropin_file_path_default: "{{ __run_logrotate_config_dropin_dir_path }}/00-defaults" # needed to detect non-default names
 
+
+# Paths of executables for management and validation.
+__run_logrotate_logrotate_exec_path: "/usr/bin/logrotate"
+
+
 ### Override defaults of dependencies used by this role (if any).
 
 # nothing right now

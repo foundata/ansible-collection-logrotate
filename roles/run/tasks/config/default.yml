@@ -10,7 +10,8 @@
     owner: "{{ __run_logrotate_config_dropin_dir_owner }}"
     group: "{{ __run_logrotate_config_dropin_dir_group }}"
     mode: "{{ __run_logrotate_config_dropin_dir_mode }}"
-
+  notify:
+    - "run_logrotate: validate configuration"
 
 ## Defaults drop-in
 
@@ -24,6 +25,8 @@
   vars:
     # Pass (and/or adjust) variables needed for the template
     tpl_defaults_conf: "{{ run_logrotate_config_defaults }}"
+  notify:
+    - "run_logrotate: validate configuration"
 
 
 - name: "Config | Default | Remove role's default drop-in config file (logrotate defaults) (if custom filename is used)"
@@ -32,6 +35,8 @@
     state: "absent"
   when:
     - __run_logrotate_config_defaults_dropin_file_path != __run_logrotate_config_defaults_dropin_file_path_default
+  notify:
+    - "run_logrotate: validate configuration"
 
 
 ## User define app-specific sections, additional drop-in files
@@ -64,3 +69,14 @@
     label: "{{ __run_logrotate_config_dropin_dir_path }}/{{ __run_logrotate_loop_file_name }}"
   when:
     - ((run_logrotate_config_sections | ansible.builtin.default({})) | ansible.builtin.length) > 0
+  notify:
+    - "run_logrotate: validate configuration"
+
+
+- name: "Config | Default | Ensure 'Include' directive exists in main service config file"
+  ansible.builtin.lineinfile:
+    path: "{{ __run_logrotate_config_file_path }}"
+    line: "include {{ __run_logrotate_config_dropin_dir_path }}"
+    state: "present"
+  notify:
+    - "run_logrotate: validate configuration"

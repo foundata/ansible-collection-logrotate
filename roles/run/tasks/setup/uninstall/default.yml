@@ -10,4 +10,34 @@
     - __run_logrotate_packages_uninstall is ansible.builtin.defined
     - (__run_logrotate_packages_uninstall | ansible.builtin.length) > 0
 
-# FIXME remove dropin files
+
+- name: "Setup | Uninstall | Remove drop-in config files (defaults + per-section)"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  vars:
+    __run_logrotate_paths_to_remove: >-
+      {{
+        (
+          [
+            __run_logrotate_config_defaults_dropin_file_path,
+            __run_logrotate_config_defaults_dropin_file_path_default
+          ]
+          +
+          (
+            run_logrotate_config_sections
+            | ansible.builtin.default({})
+            | ansible.builtin.dict2items
+            | ansible.builtin.map(attribute='key')
+            | ansible.builtin.map('lower')
+            | ansible.builtin.map('regex_replace', '[^a-z0-9._]', '_')
+            | ansible.builtin.map('regex_replace', '_+', '_')
+            | ansible.builtin.map('regex_replace', '^_|_$', '')
+            | ansible.builtin.map('regex_replace', '^(.*)$', __run_logrotate_config_dropin_dir_path ~ '/\\1')
+            | ansible.builtin.list
+          )
+        ) | ansible.builtin.unique
+      }}
+  loop: "{{ __run_logrotate_paths_to_remove }}"
+  when:
+    - __run_logrotate_paths_to_remove | ansible.builtin.length > 0
