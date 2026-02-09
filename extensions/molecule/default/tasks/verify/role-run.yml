@@ -1,0 +1,206 @@
+# Check collection role "run" outcomes.
+
+- name: "Molecule | Verify | Initialize the foundata.logrotate.run role (without actually running it; get and expose variables)"
+  ansible.builtin.include_role:
+    name: "foundata.logrotate.run"
+    tasks_from: "init"
+    public: true
+
+
+## Preparation
+
+- name: "Molecule | Verify | Set run_logrotate* role parameters as facts from __testing_state"
+  ansible.builtin.set_fact:
+    "{{ item['key'] }}": "{{ item['value'] }}"
+  loop: >-
+    {{
+      __testing_state
+      | ansible.builtin.dict2items
+      | ansible.builtin.selectattr('key', 'match', '^run_logrotate_')
+      | ansible.builtin.list
+    }}
+
+
+- name: "Molecule | Verify | Set / overwrite other expected configuration or testing data "
+  ansible.builtin.set_fact:
+    __testing_section_dropin_file_path: "{{ __run_logrotate_config_dropin_dir_path }}/foo_bar"
+
+
+## Defaults drop-in file existence
+
+- name: "Molecule | Verify | Check if logrotate drop-in config file (logrotate defaults) exists"
+  ansible.builtin.stat:
+    path: "{{ __run_logrotate_config_defaults_dropin_file_path }}"
+  register: __testing_dropin_file
+
+
+- name: "Molecule | Verify | Assert logrotate drop-in config file (logrotate defaults) exists"
+  ansible.builtin.assert:
+    that:
+      - __testing_dropin_file['stat']['exists']
+    fail_msg: >-
+      The logrotate drop-in config file (logrotate defaults)
+      '{{ __run_logrotate_config_defaults_dropin_file_path }}'
+      does not exist.
+    success_msg: >-
+      The logrotate drop-in config file (logrotate defaults)
+      '{{ __run_logrotate_config_defaults_dropin_file_path }}'
+      exists.
+
+
+- name: "Molecule | Verify | Check if default logrotate drop-in config file (logrotate defaults) does exists (if custom filename is used)"
+  ansible.builtin.stat:
+    path: "{{ __run_logrotate_config_defaults_dropin_file_path_default }}"
+  when:
+    - __run_logrotate_config_defaults_dropin_file_path != __run_logrotate_config_defaults_dropin_file_path_default
+  register: __testing_dropin_file_default
+
+
+- name: "Molecule | Verify | Assert default logrotate drop-in config file (logrotate defaults) does not exists (if custom filename is used)"
+  ansible.builtin.assert:
+    that:
+      - __testing_dropin_file_default['stat']['exists'] is ansible.builtin.false
+    fail_msg: >-
+      The default logrotate drop-in config file (logrotate defaults)
+      '{{ __run_logrotate_config_defaults_dropin_file_path_default }}'
+      exists (even though a custom filename is used).
+    success_msg: >-
+      The default logrotate drop-in config file (logrotate defaults)
+      '{{ __run_logrotate_config_defaults_dropin_file_path_default }}'
+      does not exist (valid as custom filename is used).
+  when:
+    - __run_logrotate_config_defaults_dropin_file_path != __run_logrotate_config_defaults_dropin_file_path_default
+
+
+## Custom drop-in file existence
+
+- name: "Molecule | Verify | Check if section drop-in config file exists"
+  ansible.builtin.stat:
+    path: "{{ __testing_section_dropin_file_path }}"
+  register: __testing_section_dropin_file
+
+
+- name: "Molecule | Verify | Assert section drop-in config file exists"
+  ansible.builtin.assert:
+    that:
+      - __testing_section_dropin_file['stat']['exists']
+    fail_msg: >-
+      The section drop-in config file '{{ __testing_section_dropin_file_path }}' does not exist.
+    success_msg: >-
+      The section drop-in config file '{{ __testing_section_dropin_file_path }}' exists.
+
+
+## Custom drop-in file contents
+
+- name: "Molecule | Verify | Read section drop-in config file content"
+  ansible.builtin.slurp:
+    src: "{{ __testing_section_dropin_file_path }}"
+  register: __testing_section_dropin_content
+
+
+- name: "Molecule | Verify | Set section drop-in config file content as fact"
+  ansible.builtin.set_fact:
+    __testing_section_dropin_decoded: >-
+      {{ __testing_section_dropin_content['content'] | ansible.builtin.b64decode }}
+
+
+- name: "Molecule | Verify | Assert section drop-in contains unquoted path (no spaces)"
+  ansible.builtin.assert:
+    that:
+      - "'/var/log/news/*' in __testing_section_dropin_decoded"
+    fail_msg: >-
+      The section drop-in config file does not contain the expected unquoted path '/var/log/news/*'.
+    success_msg: >-
+      The section drop-in config file contains the expected unquoted path '/var/log/news/*'.
+
+
+- name: "Molecule | Verify | Assert section drop-in contains quoted path (with spaces, glob preserved)"
+  ansible.builtin.assert:
+    that:
+      - >-
+        '"/var/log/news with spaces/"*"/foo/"*".log"'
+        in __testing_section_dropin_decoded
+    fail_msg: >-
+      The section drop-in config file does not contain the expected quoted path
+      '"/var/log/news with spaces/"*"/foo/"*".log"'.
+      Actual content: {{ __testing_section_dropin_decoded }}
+    success_msg: >-
+      The section drop-in config file contains the expected quoted path with preserved glob characters.
+
+
+- name: "Molecule | Verify | Assert section drop-in contains expected directives"
+  ansible.builtin.assert:
+    that:
+      - "'nocompress' in __testing_section_dropin_decoded"
+      - "'rotate 2' in __testing_section_dropin_decoded"
+      - "'supressed' not in __testing_section_dropin_decoded"
+    fail_msg: >-
+      The section drop-in config file is missing expected directives or contains suppressed ones.
+      Actual content: {{ __testing_section_dropin_decoded }}
+    success_msg: >-
+      The section drop-in config file contains expected directives and correctly omits false-valued ones.
+
+
+- name: "Molecule | Verify | Assert section drop-in contains prerotate script block"
+  ansible.builtin.assert:
+    that:
+      - "'prerotate' in __testing_section_dropin_decoded"
+      - "'/usr/bin/killall -HUP foo1' in __testing_section_dropin_decoded"
+      - "'/usr/bin/killall -HUP bar2' in __testing_section_dropin_decoded"
+      - "'endscript' in __testing_section_dropin_decoded"
+    fail_msg: >-
+      The section drop-in config file does not contain the expected prerotate script block.
+      Actual content: {{ __testing_section_dropin_decoded }}
+    success_msg: >-
+      The section drop-in config file contains the expected prerotate script block.
+
+
+- name: "Molecule | Verify | Validate section drop-in config file syntax (dry-run)"
+  ansible.builtin.command:
+    argv:
+      - "{{ __run_logrotate_logrotate_exec_path }}"
+      - "--debug"
+      - "{{ __testing_section_dropin_file_path }}"
+  register: __testing_section_logrotate_validation
+  changed_when: false
+  failed_when: __testing_section_logrotate_validation['rc'] != 0
+
+
+- name: "Molecule | Verify | Assert section drop-in config file syntax is valid"
+  ansible.builtin.assert:
+    that:
+      - __testing_section_logrotate_validation['rc'] == 0
+    fail_msg: >-
+      The section drop-in config file '{{ __testing_section_dropin_file_path }}' has invalid syntax.
+      Output: {{ __testing_section_logrotate_validation['stderr'] | default('') }}
+    success_msg: >-
+      The section drop-in config file '{{ __testing_section_dropin_file_path }}' has valid syntax.
+
+
+## Logrotate configuration validation
+
+- name: "Molecule | Verify | Validate logrotate configuration (dry-run)"
+  ansible.builtin.command:
+    argv:
+      - "{{ __run_logrotate_logrotate_exec_path }}"
+      - "--debug"
+      - "--verbose"
+      - "{{ __run_logrotate_config_file_path }}"
+  register: __testing_logrotate_validation_result
+  changed_when:
+    - false
+  failed_when:
+    - __testing_logrotate_validation_result is ansible.builtin.failed
+
+
+- name: "Molecule | Verify | Assert logrotate configuration is valid"
+  ansible.builtin.assert:
+    that:
+      - __testing_logrotate_validation_result is ansible.builtin.success
+    fail_msg: >-
+      The logrotate configuration '{{ __run_logrotate_config_defaults_dropin_file_path }}'
+      is invalid. Output: {{ __testing_logrotate_validation_result['stderr'] | default('') }}
+    success_msg: >-
+      The logrotate configuration '{{ __run_logrotate_config_defaults_dropin_file_path }}'
+      is valid.
+

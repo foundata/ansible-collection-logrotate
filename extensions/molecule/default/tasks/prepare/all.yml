@@ -1,0 +1,26 @@
+# Tasks for the Molecule prepare stage: Add resources needed for later steps
+# (e.g. verify) on all driver-created instances.
+
+- name: "Molecule | Prepare | Create dummy log directories"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: "directory"
+    owner: "root"
+    group: "root"
+    mode: "u=rwx,g=rx,o=rx" # 0755
+  loop:
+    - "/var/log/news"
+    - "/var/log/news with spaces/subdir/foo"
+
+
+- name: "Molecule | Prepare | Create dummylog files"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: "touch"
+    owner: "root"
+    group: "root"
+    mode: "u=rw,g=r,o=r" # 0644
+  loop:
+    - "/var/log/news/test.log"
+    - "/var/log/news with spaces/subdir/foo/test1.log"
+    - "/var/log/news with spaces/subdir/foo/test2.log"

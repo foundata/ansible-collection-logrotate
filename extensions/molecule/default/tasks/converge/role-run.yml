@@ -1,0 +1,51 @@
+# Execute the collection role "run" against all driver-created instances.
+
+- name: "Molecule | Converge | Store run_logrotate* role parameters in __testing_state"
+  ansible.builtin.include_tasks:
+    file: "../tasks/state_update.yml"
+  vars:
+    __testing_state_update:
+      # set all role configuration variables
+      run_logrotate_state: "present"
+      run_logrotate_config_defaults:
+        rotate: 5
+        weekly: true
+        mail: "recipient@example.org"
+        postrotate: |
+          /usr/bin/killall -HUP foo
+          /usr/bin/killall -HUP bar
+
+      run_logrotate_config_defaults_dropin_file_name: "00-custom-dropin-defaults"
+
+      run_logrotate_config_sections:
+        foo-bar:
+          paths:
+            - "/var/log/news/*"
+            - "/var/log/news with spaces/*/foo/*.log"
+          rotate: 2
+          supressed: false # false value will lead to an ignored option
+          nocompress: true
+          prerotate: |
+            /usr/bin/killall -HUP foo1
+            /usr/bin/killall -HUP bar2
+
+
+- name: "Molecule | Converge | Set run_logrotate* role parameters as facts from __testing_state"
+  ansible.builtin.set_fact:
+    "{{ item['key'] }}": "{{ item['value'] }}"
+  loop: >-
+    {{
+      __testing_state
+      | ansible.builtin.dict2items
+      | ansible.builtin.selectattr('key', 'match', '^run_logrotate_')
+      | ansible.builtin.list
+    }}
+
+
+- name: "Molecule | Converge | Include the foundata.logrotate.run role"
+  ansible.builtin.include_role:
+    name: "foundata.logrotate.run"
+  # vars: All run_logrotate* variables are set as facts and passed this way to
+  #       the role. This enables persisting the values in __testing_state
+  #       and restoring them in later stages (e.g. verify) without manually
+  #       duplicating data across playbooks.
