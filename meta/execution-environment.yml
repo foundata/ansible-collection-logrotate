@@ -1,0 +1,10 @@
+# Execution Environment (EE) dependencies for the foundata.logrotate collection
+
+---
+
+version: 3
+
+dependencies:
+  galaxy:
+    collections: {}
+    roles: {}
