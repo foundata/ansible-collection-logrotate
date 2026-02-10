@@ -6,19 +6,28 @@ The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansi
 
 ## Table of contents<a id="toc"></a>
 
+- [Features](#features)
 - [Example playbooks, using this role](#examples)
 - [Supported tags](#tags)<!-- ANSIBLE DOCSMITH TOC START -->
-- [Role variables](#variables)
-<!-- ANSIBLE DOCSMITH TOC END -->
+- [Role variables](#variables)<!-- ANSIBLE DOCSMITH TOC END -->
 - [Dependencies](#dependencies)
 - [Compatibility](#compatibility)
 - [External requirements](#requirements)
 
 
 
+## Features<a id="features"></a>
+
+* Preserve distribution defaults by managing only drop-in files in `/etc/logrotate.d/`.
+* Simple rule definition:
+  * Optional baseline defaults
+  * Log rotation with a simple dictionary per application.
+
+
+
 ## Example playbooks, using this role<a id="examples"></a>
 
-Installation with automatic upgrade:
+Basic installation with your operating system's defaults and automatic upgrade on each Ansible run:
 
 ```yaml
 ---
@@ -33,6 +42,73 @@ Installation with automatic upgrade:
         name: "foundata.logrotate.run"
       vars:
         run_logrotate_autoupgrade: true
+```
+
+
+To create a logrotate configuration like
+
+```
+rotate 5
+weekly
+mail recipient@example.org
+```
+
+and
+
+```
+/var/log/my_app/*.log "/var/log/with space/"*".log" {  # Path(s) to rotate, automatic quoting preserving globs
+    daily                   # Rotation frequency
+    rotate 14               # Keep 14 rotated files
+    compress                # Compress rotated files
+    delaycompress           # Wait one cycle before compressing
+    missingok               # Don't error if file missing
+    notifempty              # Don't rotate empty files
+    create 0640 root adm    # Create new file with these permissions
+    sharedscripts           # Run scripts once, not per-file
+    postrotate              # Script block
+        systemctl reload my-app > /dev/null 2>&1 || true
+    endscript
+}
+```
+
+the following playbook could be used:
+
+```yaml
+---
+
+- name: "Initialize the foundata.logrotate.run role"
+  hosts: localhost
+  gather_facts: false
+  tasks:
+
+    - name: "Trigger invocation of the foundata.logrotate.run role"
+      ansible.builtin.include_role:
+        name: "foundata.logrotate.run"
+      vars:
+
+        # Creates /etc/logrotate.d/00-defaults. Optional baseline behavior for
+        # all rotation sections and may be overridden by per-section directives
+        # defined in run_logrotate_config_sections
+        run_logrotate_config_defaults:
+          rotate: 5
+          weekly: true
+          mail: "recipient@example.org"
+
+        run_logrotate_config_sections:
+          my_app:                              # Creates /etc/logrotate.d/my_app
+            path:                              # Path line(s)
+              - "/var/log/my_app/*.log"
+              - "/var/log/with space/*.log"
+            daily: true
+            rotate: 14
+            compress: true
+            delaycompress: true
+            missingok: true
+            notifempty: true
+            create: "0640 root adm"
+            sharedscripts: true
+            postrotate: |
+              systemctl reload my_app > /dev/null 2>&1 || true
 ```
 
 Uninstall:
