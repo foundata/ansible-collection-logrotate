@@ -163,13 +163,14 @@
       - "{{ __testing_section_dropin_file_path }}"
   register: __testing_section_logrotate_validation
   changed_when: false
-  failed_when: __testing_section_logrotate_validation['rc'] != 0
+  failed_when:
+    - __testing_section_logrotate_validation is ansible.builtin.failed
 
 
 - name: "Molecule | Verify | Assert section drop-in config file syntax is valid"
   ansible.builtin.assert:
     that:
-      - __testing_section_logrotate_validation['rc'] == 0
+      - __testing_section_logrotate_validation is ansible.builtin.success
     fail_msg: >-
       The section drop-in config file '{{ __testing_section_dropin_file_path }}' has invalid syntax.
       Output: {{ __testing_section_logrotate_validation['stderr'] | default('') }}
@@ -204,3 +205,119 @@
       The logrotate configuration '{{ __run_logrotate_config_defaults_dropin_file_path }}'
       is valid.
 
+
+## Systemd timer existence + active/enabled verification
+
+- name: "Molecule | Verify | systemd timer"
+  when:
+    - ansible_facts['service_mgr'] == 'systemd'
+  block:
+
+    - name: "Molecule | Verify | Gather systemd unit files (JSON)"
+      ansible.builtin.command:
+        argv:
+          - "systemctl"
+          - "list-unit-files"
+          - "--all"
+          - "--output=json"
+      register: __testing_systemd_unit_files_json
+      changed_when:
+        - false
+      failed_when:
+        - __testing_systemd_unit_files_json is ansible.builtin.failed
+
+
+    - name: "Molecule | Verify | Build systemd_facts (list of unit_file names)"
+      ansible.builtin.set_fact:
+        __testing_systemd_facts: >-
+          {{
+            __testing_systemd_unit_files_json['stdout']
+            | ansible.builtin.from_json
+            | ansible.builtin.map(attribute='unit_file')
+            | ansible.builtin.list
+          }}
+
+
+    - name: "Molecule | Verify | Show systemd_facts"
+      ansible.builtin.debug:
+        var: __testing_systemd_facts
+        verbosity: 3
+
+
+    # FIXME discuss if adding to testing state or introduce timer management for the role (and use internal vars)
+    - name: "Molecule | Verify | Set expected systemd timer parameters as facts (from __testing_state, with sensible defaults)"
+      ansible.builtin.set_fact:
+        __testing_timer_unit_name: "{{ __testing_state['__testing_timer_unit_name'] | default('logrotate.timer') }}"
+        __testing_timer_expected_active_state: "{{ __testing_state['__testing_timer_expected_active_state'] | default('inactive') }}"
+        __testing_timer_expected_enabled_state: "{{ __testing_state['__testing_timer_expected_enabled_state'] | default('enabled') }}"
+        __testing_timer_expect_present: "{{ __testing_state['__testing_timer_expect_present'] | default(true) }}"
+
+
+    - name: "Molecule | Verify | Assert timer existence expectation (systemd_facts)"
+      ansible.builtin.assert:
+        that:
+          - (__testing_timer_unit_name in __testing_systemd_facts) == (__testing_timer_expect_present | ansible.builtin.bool)
+        fail_msg: >-
+          Timer presence mismatch for '{{ __testing_timer_unit_name }}'.
+          expect_present={{ __testing_timer_expect_present }}
+          present={{ __testing_timer_unit_name in __testing_systemd_facts }}
+        success_msg: >-
+          Timer presence expectation matched for '{{ __testing_timer_unit_name }}'
+          (expect_present={{ __testing_timer_expect_present }}).
+
+
+    - name: "Molecule | Verify | Check timer active state (systemctl is-active)"
+      ansible.builtin.command:
+        argv:
+          - "systemctl"
+          - "is-active"
+          - "{{ __testing_timer_unit_name }}"
+      register: __testing_timer_is_active
+      changed_when:
+        - false
+      failed_when:
+        - __testing_timer_is_active is ansible.builtin.failed
+        - __testing_timer_is_active['rc'] != 3 # inactive, installed but not running (not an error)
+      when:
+        - __testing_timer_expect_present | ansible.builtin.bool
+
+
+    - name: "Molecule | Verify | Check timer enabled state (systemctl is-enabled)"
+      ansible.builtin.command:
+        argv:
+          - "systemctl"
+          - "is-enabled"
+          - "{{ __testing_timer_unit_name }}"
+      register: __testing_timer_is_enabled
+      changed_when:
+        - false
+      failed_when:
+        - __testing_timer_is_enabled is ansible.builtin.failed
+        - __testing_timer_is_active['rc'] > 1 # rc=1 for disabled/masked/unknown on some versions
+      when:
+        - __testing_timer_expect_present | ansible.builtin.bool
+
+
+    - name: "Molecule | Verify | Assert timer is in expected active/enabled states"
+      ansible.builtin.assert:
+        that:
+          - (__testing_timer_is_active['stdout'] | trim) == __testing_timer_expected_active_state
+          - (__testing_timer_is_enabled['stdout'] | trim) == __testing_timer_expected_enabled_state
+        fail_msg: >-
+          Timer '{{ __testing_timer_unit_name }}' is not in expected state.
+          is-active: '{{ __testing_timer_is_active['stdout'] | trim }}' (rc={{ __testing_timer_is_active['rc'] }}, expected '{{ __testing_timer_expected_active_state }}')
+          is-enabled: '{{ __testing_timer_is_enabled['stdout'] | trim }}' (rc={{ __testing_timer_is_enabled['rc'] }}, expected '{{ __testing_timer_expected_enabled_state }}')
+        success_msg: >-
+          Timer '{{ __testing_timer_unit_name }}' is '{{ __testing_timer_expected_active_state }}' and
+          '{{ __testing_timer_expected_enabled_state }}'.
+      when:
+        - __testing_timer_expect_present | ansible.builtin.bool
+
+
+    - name: "Molecule | Verify | Assert timer is unknown when not expected to be present (sanity)"
+      ansible.builtin.assert:
+        that:
+          - (__testing_timer_unit_name not in __testing_systemd_facts)
+          - (__testing_timer_is_active is not defined) or ((__testing_timer_is_active['stdout'] | trim) in ['unknown', 'inactive', 'failed'])
+      when:
+        - (__testing_timer_expect_present | ansible.builtin.bool) is ansible.builtin.false
