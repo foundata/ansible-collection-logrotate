@@ -23,6 +23,7 @@
   notify:
     - "run_logrotate: validate configuration"
 
+
 ## Defaults drop-in
 
 - name: "Config | Default | Create drop-in config file (logrotate defaults)"
@@ -83,10 +84,26 @@
     - "run_logrotate: validate configuration"
 
 
+
 - name: "Config | Default | Ensure 'Include' directive exists in main service config file"
   ansible.builtin.lineinfile:
     path: "{{ __run_logrotate_config_file_path }}"
     line: "include {{ __run_logrotate_config_dropin_dir_path }}"
     state: "present"
+  when:
+    # openSUSE Leap does NOT rely on an "include" directive inside the main
+    # configuration file (/usr/etc/logrotate.conf). Instead, logrotate is
+    # executed via /usr/sbin/logrotate-all (systemd service) which dynamically
+    # loads:
+    #   - /etc/logrotate.conf (if present) or /usr/etc/logrotate.conf
+    #   - {/usr,}/etc/logrotate.d/*
+    # Includes are handled by the wrapper script, not via an "include" directive
+    # inside the main config file. Therefore we do NOT add an include directive
+    # on this platform.
+    #
+    # More information:
+    #   - cat /usr/sbin/logrotate-all (on openSUSE Leap)
+    #   - systemctl cat logrotate.service (on openSUSE Leap)
+    - (ansible_facts['distribution'] | ansible.builtin.regex_replace(' ', '_') | ansible.builtin.lower) != 'opensuse_leap'
   notify:
     - "run_logrotate: validate configuration"

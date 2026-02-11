@@ -18,7 +18,9 @@ The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansi
 
 ## Features<a id="features"></a>
 
-* Preserve distribution defaults by managing only drop-in files in `/etc/logrotate.d/`.
+* Preserve distribution defaults by managing only drop-in configuration files in `/etc/logrotate.d/`:
+  * ensuring compatibility across a wide range of distributions
+  * including openSUSE-specific behavior.
 * Simple rule definition:
   * Optional baseline defaults
   * Log rotation with a simple dictionary per application.
