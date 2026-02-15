@@ -16,3 +16,10 @@
     - __run_logrotate_validation_result is ansible.builtin.failed
   listen:
     - "run_logrotate: validate configuration"
+
+# FIXME check needed?
+- name: "Handlers | Reload systemd"
+  ansible.builtin.systemd:
+    daemon_reload: true
+  listen:
+    - "run_logrotate: reload systemd"

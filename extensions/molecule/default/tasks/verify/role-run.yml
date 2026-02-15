@@ -210,7 +210,7 @@
 
 - name: "Molecule | Verify | systemd timer"
   when:
-    - ansible_facts['service_mgr'] == 'systemd'
+    - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'
   block:
 
     - name: "Molecule | Verify | Gather systemd unit files (JSON)"
@@ -244,26 +244,22 @@
         verbosity: 3
 
 
-    # FIXME discuss if adding to testing state or introduce timer management for the role (and use internal vars)
     - name: "Molecule | Verify | Set expected systemd timer parameters as facts (from __testing_state, with sensible defaults)"
       ansible.builtin.set_fact:
-        __testing_timer_unit_name: "{{ __testing_state['__testing_timer_unit_name'] | default('logrotate.timer') }}"
-        __testing_timer_expected_active_state: "{{ __testing_state['__testing_timer_expected_active_state'] | default('inactive') }}"
-        __testing_timer_expected_enabled_state: "{{ __testing_state['__testing_timer_expected_enabled_state'] | default('enabled') }}"
-        __testing_timer_expect_present: "{{ __testing_state['__testing_timer_expect_present'] | default(true) }}"
+        __testing_timer_unit_name: "{{ __run_logrotate_systemd_timer_unit_name | default('logrotate.timer') }}"
 
 
     - name: "Molecule | Verify | Assert timer existence expectation (systemd_facts)"
       ansible.builtin.assert:
         that:
-          - (__testing_timer_unit_name in __testing_systemd_facts) == (__testing_timer_expect_present | ansible.builtin.bool)
+          - (__testing_timer_unit_name in __testing_systemd_facts) == true
         fail_msg: >-
           Timer presence mismatch for '{{ __testing_timer_unit_name }}'.
-          expect_present={{ __testing_timer_expect_present }}
+          expect_present=true
           present={{ __testing_timer_unit_name in __testing_systemd_facts }}
         success_msg: >-
           Timer presence expectation matched for '{{ __testing_timer_unit_name }}'
-          (expect_present={{ __testing_timer_expect_present }}).
+          (expect_present=true).
 
 
     - name: "Molecule | Verify | Check timer active state (systemctl is-active)"
@@ -278,8 +274,6 @@
       failed_when:
         - __testing_timer_is_active is ansible.builtin.failed
         - __testing_timer_is_active['rc'] != 3 # inactive, installed but not running (not an error)
-      when:
-        - __testing_timer_expect_present | ansible.builtin.bool
 
 
     - name: "Molecule | Verify | Check timer enabled state (systemctl is-enabled)"
@@ -294,30 +288,14 @@
       failed_when:
         - __testing_timer_is_enabled is ansible.builtin.failed
         - __testing_timer_is_active['rc'] > 1 # rc=1 for disabled/masked/unknown on some versions
-      when:
-        - __testing_timer_expect_present | ansible.builtin.bool
 
 
     - name: "Molecule | Verify | Assert timer is in expected active/enabled states"
       ansible.builtin.assert:
         that:
-          - (__testing_timer_is_active['stdout'] | trim) == __testing_timer_expected_active_state
-          - (__testing_timer_is_enabled['stdout'] | trim) == __testing_timer_expected_enabled_state
+          - (__testing_timer_is_enabled['stdout'] | trim) == 'enabled'
         fail_msg: >-
           Timer '{{ __testing_timer_unit_name }}' is not in expected state.
-          is-active: '{{ __testing_timer_is_active['stdout'] | trim }}' (rc={{ __testing_timer_is_active['rc'] }}, expected '{{ __testing_timer_expected_active_state }}')
-          is-enabled: '{{ __testing_timer_is_enabled['stdout'] | trim }}' (rc={{ __testing_timer_is_enabled['rc'] }}, expected '{{ __testing_timer_expected_enabled_state }}')
+          is-enabled: '{{ __testing_timer_is_enabled['stdout'] | trim }}' (rc={{ __testing_timer_is_enabled['rc'] }}, expected 'enabled')
         success_msg: >-
-          Timer '{{ __testing_timer_unit_name }}' is '{{ __testing_timer_expected_active_state }}' and
-          '{{ __testing_timer_expected_enabled_state }}'.
-      when:
-        - __testing_timer_expect_present | ansible.builtin.bool
-
-
-    - name: "Molecule | Verify | Assert timer is unknown when not expected to be present (sanity)"
-      ansible.builtin.assert:
-        that:
-          - (__testing_timer_unit_name not in __testing_systemd_facts)
-          - (__testing_timer_is_active is not defined) or ((__testing_timer_is_active['stdout'] | trim) in ['unknown', 'inactive', 'failed'])
-      when:
-        - (__testing_timer_expect_present | ansible.builtin.bool) is ansible.builtin.false
+          Timer '{{ __testing_timer_unit_name }}' is 'enabled'.
