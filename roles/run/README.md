@@ -9,7 +9,15 @@ The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansi
 - [Features](#features)
 - [Example playbooks, using this role](#examples)
 - [Supported tags](#tags)<!-- ANSIBLE DOCSMITH TOC START -->
-- [Role variables](#variables)<!-- ANSIBLE DOCSMITH TOC END -->
+- [Role variables](#variables)
+  - [`run_logrotate_state`](#variable-run_logrotate_state)
+  - [`run_logrotate_autoupgrade`](#variable-run_logrotate_autoupgrade)
+  - [`run_logrotate_config_defaults`](#variable-run_logrotate_config_defaults)
+  - [`run_logrotate_config_defaults_dropin_file_name`](#variable-run_logrotate_config_defaults_dropin_file_name)
+  - [`run_logrotate_config_sections`](#variable-run_logrotate_config_sections)
+  - [`run_logrotate_timer_manage`](#variable-run_logrotate_timer_manage)
+  - [`run_logrotate_timer_settings`](#variable-run_logrotate_timer_settings)
+<!-- ANSIBLE DOCSMITH TOC END -->
 - [Dependencies](#dependencies)
 - [Compatibility](#compatibility)
 - [External requirements](#requirements)
@@ -47,7 +55,7 @@ Basic installation with your operating system's defaults and automatic upgrade o
 ```
 
 
-Defining baseline defaults and per-application rotation rules. To create a logrotate configuration like
+To define global logrotate defaults and application-specific rotation rules—resulting in configurations such as:
 
 ```
 rotate 5
@@ -55,7 +63,7 @@ weekly
 mail recipient@example.org
 ```
 
-and
+and:
 
 ```
 /var/log/my_app/*.log "/var/log/with space/"*".log" {  # Path(s) to rotate, automatic quoting preserving globs
@@ -73,7 +81,7 @@ and
 }
 ```
 
-use the following playbook:
+the following playbook can be used:
 
 ```yaml
 ---
@@ -169,11 +177,243 @@ There are also tags usually not meant to be called directly but listed for the s
 
 ## Role variables<a id="variables"></a>
 
-See [`defaults/main.yml`](./defaults/main.yml) for all available role parameters and their description. [`vars/main.yml`](./vars/main.yml) contains internal variables you should not override (but their description might be interesting).
+The following variables can be configured for this role:
 
-Additionally, there are variables read from other roles and/or the global scope (for example, host or group vars) as follows:
+| Variable | Type | Required | Default | Description (abstract) |
+|----------|------|----------|---------|------------------------|
+| `run_logrotate_state` | `str` | No | `"present"` | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_logrotate_state) |
+| `run_logrotate_autoupgrade` | `bool` | No | `false` | If set to `true`, all managed packages will be upgraded during each Ansible run (e.g., when the package provider detects a newer version than the currently installed one). |
+| `run_logrotate_config_defaults` | `dict` | No | `{}` | Global logrotate default directives for all sections.<br><br>This dictionary defines logrotate directives that apply globally and are written to the drop-in file specified by `run_logrotate_config_defaults_dropin_file_name` in […](#variable-run_logrotate_config_defaults) |
+| `run_logrotate_config_defaults_dropin_file_name` | `str` | No | `"00-defaults"` | Filename of the drop-in configuration file placed in `/logrotate.d/` to define global defaults. Defaults to `00-defaults`. The `00-` prefix ensures the file is loaded early, allowing its settings be overridden by later configuration files.<br><br>If […](#variable-run_logrotate_config_defaults_dropin_file_name) |
+| `run_logrotate_config_sections` | `dict` | No | `{}` | Log rotation section definitions. Each section creates a drop-in configuration file in `/logrotate.d/`.<br><br>Dictionary structure:<br><br>- Keys: Section name (will create `/logrotate.d/`) - Values: Dictionary containing path(s) and rotation […](#variable-run_logrotate_config_sections) |
+| `run_logrotate_timer_manage` | `bool` | No | `true` | Controls whether the role manages the automatic logrotate scheduling.<br><br>When set to `true` (the default), the role configures the systemd timer unit for logrotate according to `run_logrotate_timer_settings`.<br><br>Note: This feature currently […](#variable-run_logrotate_timer_manage) |
+| `run_logrotate_timer_settings` | `dict` | No | `{}` | Configuration for the systemd timer that triggers logrotate execution. This dictionary controls when and how often logrotate runs. These settings map to systemd timer unit directives and are applied via a drop-in override file.<br><br>Use standard […](#variable-run_logrotate_timer_settings) |
 
-- None right now.
+### `run_logrotate_state`<a id="variable-run_logrotate_state"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Determines whether the managed resources should be `present` or `absent`.
+
+`present` ensures that required components, such as software packages, are
+installed and configured.
+
+`absent` reverts changes as much as possible, such as removing packages,
+deleting created users, stopping services, restoring modified settings, …
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"present"`
+- **Choices**: `present`, `absent`
+
+
+
+### `run_logrotate_autoupgrade`<a id="variable-run_logrotate_autoupgrade"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+If set to `true`, all managed packages will be upgraded during each Ansible
+run (e.g., when the package provider detects a newer version than the
+currently installed one).
+
+- **Type**: `bool`
+- **Required**: No
+- **Default**: `false`
+
+
+
+### `run_logrotate_config_defaults`<a id="variable-run_logrotate_config_defaults"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Global logrotate default directives for all sections.
+
+This dictionary defines logrotate directives that apply globally and are
+written to the drop-in file specified by
+`run_logrotate_config_defaults_dropin_file_name` in
+`<config dir>/logrotate.d/`.
+
+All standard logrotate directives may be used as keys. Use `true` as the value
+for directives that take no arguments. No log file paths must be specified
+here.
+
+These defaults provide baseline behavior for all rotation sections and may be
+overridden by later drop-in configuration files or by per-section directives
+defined in `run_logrotate_config_sections`.
+
+Using a drop-in for also for global defaults avoids modifying
+`/etc/logrotate.conf` and provides a safe way to customize or replace platform
+defaults.
+
+- **Type**: `dict`
+- **Required**: No
+- **Default**: `{}`
+
+
+
+### `run_logrotate_config_defaults_dropin_file_name`<a id="variable-run_logrotate_config_defaults_dropin_file_name"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Filename of the drop-in configuration file placed in
+`<config dir>/logrotate.d/` to define global defaults. Defaults to
+`00-defaults`. The `00-` prefix ensures the file is loaded early, allowing
+its settings be overridden by later configuration files.
+
+If a non-default filename is used, any existing
+`<config dir>/logrotate.d/00-defaults` from previous Ansible runs will be
+removed automatically to prevent conflicts.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"00-defaults"`
+
+
+
+### `run_logrotate_config_sections`<a id="variable-run_logrotate_config_sections"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Log rotation section definitions. Each section creates a drop-in configuration
+file in `<config dir>/logrotate.d/`.
+
+Dictionary structure:
+
+- Keys: Section name (will create `<config dir>/logrotate.d/<name>`)
+- Values: Dictionary containing path(s) and rotation directives. All standard
+  logrotate directives may be used as keys.
+
+Required keys per rule:
+
+- `path`: Log file path(s) or glob to rotate. Can be a string (single path or
+  glob) or a list of paths/globs. Paths are automatically quoted when needed
+  without preventing glob expansion. `paths` can be used as alias.
+
+Special cases:
+
+- Use `true` as the value for logrotate directives that take no arguments.
+- There is a `content` key, allowing you to put raw lines for the drop-in file
+  as the value without any special treatment. This is useful if you already have
+  existing configuration and do not want to convert their definitions into YAML:
+  ```yaml
+  my-complex-logrotate:
+    content: |
+      /var/log/app1/*.log "/var/log/app2 space/"*".log" {
+        daily
+        rotate 14
+        compress
+        postrotate
+          systemctl reload my-app > /dev/null 2>&1 || true
+        endscript
+      }
+
+Example:
+
+```yaml
+my_app:
+  path:
+    - "/var/log/app1/*.log"
+    - "/var/log/app2 space/*.log"
+  daily: true                  # Rotation frequency
+  rotate: 14                   # Keep 14 rotated files
+  compress: true               # Compress rotated files
+  delaycompress: true          # Wait one cycle before compressing
+  missingok: true              # Don't error if file missing
+  notifempty: true             # Don't rotate empty files
+  create: "0640 www-data adm"  # Create new file with these permissions
+  sharedscripts: true          # Run scripts once, not per-file
+  postrotate: |                # Script block
+    systemctl reload my-app > /dev/null 2>&1 || true
+```
+
+will create `logrotate.d/my_app` with the content:
+
+```
+/var/log/app1/*.log "/var/log/app2 space/"*".log" {
+  daily
+  rotate 14
+  compress
+  delaycompress
+  missingok
+  notifempty
+  create 0640 www-data adm
+  sharedscripts
+  postrotate
+    systemctl reload my-app > /dev/null 2>&1 || true
+  endscript
+}
+```
+
+The official documentation provides general configuration guidance:
+
+- [`man logrotate`](https://manpages.debian.org/testing/logrotate/logrotate.8.en.html)
+- [Configuration file directives](https://manpages.debian.org/testing/logrotate/logrotate.8.en.html#CONFIGURATION_FILE_DIRECTIVES)
+
+- **Type**: `dict`
+- **Required**: No
+- **Default**: `{}`
+
+
+
+### `run_logrotate_timer_manage`<a id="variable-run_logrotate_timer_manage"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Controls whether the role manages the automatic logrotate scheduling.
+
+When set to `true` (the default), the role configures the systemd timer
+unit for logrotate according to `run_logrotate_timer_settings`.
+
+Note: This feature currently only supports `systemd` as the service
+manager. Other service managers (e.g., SysVinit with cron) are not
+supported. On non-systemd systems, a warning is displayed and the
+platform's default scheduling mechanism remains unchanged.
+
+- **Type**: `bool`
+- **Required**: No
+- **Default**: `true`
+
+
+
+### `run_logrotate_timer_settings`<a id="variable-run_logrotate_timer_settings"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Configuration for the systemd timer that triggers logrotate execution.
+This dictionary controls when and how often logrotate runs. These
+settings map to systemd timer unit directives and are applied via
+a drop-in override file.
+
+Use standard systemd `[Timer]` directives as keys with their corresponding
+values.
+
+Dictionary structure:
+
+- Keys: Standard systemd `[Timer]` directives.
+- Values: Corresponding configuration values. Common options include:
+  - `OnCalendar`: Defines the schedule on which the logrotate timer is
+     triggered. Defaults to `daily`. An (at least) daily schedule is
+     recommended.
+  - `RandomizedDelaySec`: Adds a random delay before execution to avoid
+    simultaneous runs across systems.  Defaults to `1h`.
+  - `Persistent`: Ensures missed timer runs are executed at the next boot
+    if the system was powered off. Defaults to `true`. Recommended to keep
+    enabled to ensure log rotation occurs even after the system was
+    unavailable during a scheduled run.
+
+Special cases:
+
+- For boolean values, use `true`/`false` (these will be converted to strings
+  by the role as needed).
+
+Only effective when `run_logrotate_timer_manage` is `true`.
+
+- **Type**: `dict`
+- **Required**: No
+- **Default**: `{}`
+
+
+
 
 <!-- ANSIBLE DOCSMITH MAIN END -->
 
