@@ -47,7 +47,7 @@ Basic installation with your operating system's defaults and automatic upgrade o
 ```
 
 
-To create a logrotate configuration like
+Defining baseline defaults and per-application rotation rules. To create a logrotate configuration like
 
 ```
 rotate 5
@@ -73,7 +73,7 @@ and
 }
 ```
 
-the following playbook could be used:
+use the following playbook:
 
 ```yaml
 ---
@@ -111,6 +111,27 @@ the following playbook could be used:
             sharedscripts: true
             postrotate: |
               systemctl reload my_app > /dev/null 2>&1 || true
+```
+
+Customizing the systemd timer that triggers logrotate (e.g. changing the schedule or randomized delay):
+
+```yaml
+---
+- name: "Initialize the foundata.logrotate.run role"
+  hosts: localhost
+  gather_facts: false
+  tasks:
+
+    - name: "Trigger invocation of the foundata.logrotate.run role"
+      ansible.builtin.include_role:
+        name: "foundata.logrotate.run"
+      vars:
+
+        # Creates /etc/systemd/system/logrotate.timer.d/00-managed.conf as a
+        # systemd drop-in to override the platform's default timer unit settings.
+        run_logrotate_timer_manage: true
+        run_logrotate_timer_settings:
+          RandomizedDelaySec: "30m"
 ```
 
 Uninstall:
