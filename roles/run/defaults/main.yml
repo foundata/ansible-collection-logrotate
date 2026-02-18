@@ -30,7 +30,4 @@ run_logrotate_config_sections: {}
 
 run_logrotate_timer_manage: true
 
-run_logrotate_timer_settings:
-  schedule: "daily"
-  jitter: "1h"
-  catch_up: true
+run_logrotate_timer_settings: {} # see __run_logrotate_timer_settings_defaults in vars/main.yml for the defaults

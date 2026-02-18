@@ -24,6 +24,7 @@
 - name: "Molecule | Verify | Set / overwrite other expected configuration or testing data "
   ansible.builtin.set_fact:
     __testing_section_dropin_file_path: "{{ __run_logrotate_config_dropin_dir_path }}/foo_bar"
+    __testing_systemctl_exec_path: "/usr/bin/systemctl"
 
 
 ## Defaults drop-in file existence
@@ -206,17 +207,32 @@
       is valid.
 
 
-## Systemd timer existence + active/enabled verification
+## systemd timer existence + active/enabled verification
+
+- name: "Molecule | Verify | Fail on unsupported service manager for timer configuration"
+  ansible.builtin.fail:
+    msg: >-
+      Timer management is only supported with systemd as service manager.
+      The current service manager '{{ ansible_facts['service_mgr'] }}' is not supported.
+  when:
+    - (ansible_facts['service_mgr'] | ansible.builtin.lower) != 'systemd'
+
 
 - name: "Molecule | Verify | systemd timer"
   when:
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'
   block:
 
+    - name: "Molecule | Verify | Set expected systemd timer parameters as facts (from __testing_state, with sensible defaults)"
+      ansible.builtin.set_fact:
+        __testing_systemd_timer_unit_name: "{{ __run_logrotate_systemd_timer_unit_name }}"
+        __testing_systemd_timer_unit_dropin_file_path: "{{ __run_logrotate_systemd_timer_unit_dropin_file_path }}"
+
+
     - name: "Molecule | Verify | Gather systemd unit files (JSON)"
       ansible.builtin.command:
         argv:
-          - "systemctl"
+          - "{{ __testing_systemctl_exec_path }}"
           - "list-unit-files"
           - "--all"
           - "--output=json"
@@ -244,30 +260,25 @@
         verbosity: 3
 
 
-    - name: "Molecule | Verify | Set expected systemd timer parameters as facts (from __testing_state, with sensible defaults)"
-      ansible.builtin.set_fact:
-        __testing_timer_unit_name: "{{ __run_logrotate_systemd_timer_unit_name | default('logrotate.timer') }}"
-
-
     - name: "Molecule | Verify | Assert timer existence expectation (systemd_facts)"
       ansible.builtin.assert:
         that:
-          - (__testing_timer_unit_name in __testing_systemd_facts) == true
+          - (__testing_systemd_timer_unit_name in __testing_systemd_facts) == true
         fail_msg: >-
-          Timer presence mismatch for '{{ __testing_timer_unit_name }}'.
+          Timer presence mismatch for '{{ __testing_systemd_timer_unit_name }}'.
           expect_present=true
-          present={{ __testing_timer_unit_name in __testing_systemd_facts }}
+          present={{ __testing_systemd_timer_unit_name in __testing_systemd_facts }}
         success_msg: >-
-          Timer presence expectation matched for '{{ __testing_timer_unit_name }}'
+          Timer presence expectation matched for '{{ __testing_systemd_timer_unit_name }}'
           (expect_present=true).
 
 
     - name: "Molecule | Verify | Check timer active state (systemctl is-active)"
       ansible.builtin.command:
         argv:
-          - "systemctl"
+          - "{{ __testing_systemctl_exec_path }}"
           - "is-active"
-          - "{{ __testing_timer_unit_name }}"
+          - "{{ __testing_systemd_timer_unit_name }}"
       register: __testing_timer_is_active
       changed_when:
         - false
@@ -279,15 +290,14 @@
     - name: "Molecule | Verify | Check timer enabled state (systemctl is-enabled)"
       ansible.builtin.command:
         argv:
-          - "systemctl"
+          - "{{ __testing_systemctl_exec_path }}"
           - "is-enabled"
-          - "{{ __testing_timer_unit_name }}"
+          - "{{ __testing_systemd_timer_unit_name }}"
       register: __testing_timer_is_enabled
       changed_when:
         - false
       failed_when:
         - __testing_timer_is_enabled is ansible.builtin.failed
-        - __testing_timer_is_active['rc'] > 1 # rc=1 for disabled/masked/unknown on some versions
 
 
     - name: "Molecule | Verify | Assert timer is in expected active/enabled states"
@@ -295,7 +305,108 @@
         that:
           - (__testing_timer_is_enabled['stdout'] | trim) == 'enabled'
         fail_msg: >-
-          Timer '{{ __testing_timer_unit_name }}' is not in expected state.
+          Timer '{{ __testing_systemd_timer_unit_name }}' is not in expected state.
           is-enabled: '{{ __testing_timer_is_enabled['stdout'] | trim }}' (rc={{ __testing_timer_is_enabled['rc'] }}, expected 'enabled')
         success_msg: >-
-          Timer '{{ __testing_timer_unit_name }}' is 'enabled'.
+          Timer '{{ __testing_systemd_timer_unit_name }}' is 'enabled'.
+
+
+    ## systemd timer drop-in file existence
+
+    - name: "Molecule | Verify | Check if systemd timer drop-in config file exists"
+      ansible.builtin.stat:
+        path: "{{ __testing_systemd_timer_unit_dropin_file_path }}"
+      register: __testing_systemd_timer_unit_dropin_file
+
+
+    - name: "Molecule | Verify | Assert systemd timer drop-in config file exists"
+      ansible.builtin.assert:
+        that:
+          - __testing_systemd_timer_unit_dropin_file['stat']['exists']
+        fail_msg: >-
+          The systemd timer drop-in config file '{{ __testing_systemd_timer_unit_dropin_file_path }}' does not exist.
+        success_msg: >-
+          The systemd timer drop-in config file '{{ __testing_systemd_timer_unit_dropin_file_path }}' exists.
+
+
+    ## systemd timer drop-in file contents
+
+    - name: "Molecule | Verify | Read systemd timer drop-in config file content"
+      ansible.builtin.slurp:
+        src: "{{ __testing_systemd_timer_unit_dropin_file_path }}"
+      register: __testing_systemd_timer_unit_dropin_content
+
+
+    - name: "Molecule | Verify | Set systemd timer drop-in config file content as fact"
+      ansible.builtin.set_fact:
+        __testing_systemd_timer_unit_dropin_decoded: >-
+          {{ __testing_systemd_timer_unit_dropin_content['content'] | ansible.builtin.b64decode }}
+
+
+    - name: "Molecule | Verify | Assert systemd timer drop-in contains expected directives"
+      ansible.builtin.assert:
+        that:
+          - "'OnCalendar=hourly' in __testing_systemd_timer_unit_dropin_decoded"
+          - "'RandomizedDelaySec=30m' in __testing_systemd_timer_unit_dropin_decoded"
+          - "'Persistent=false' in __testing_systemd_timer_unit_dropin_decoded"
+        fail_msg: >-
+          The systemd timer drop-in config file is missing expected directives.
+          Actual content: {{ __testing_systemd_timer_unit_dropin_decoded }}
+        success_msg: >-
+          The systemd timer drop-in config file contains expected directives.
+
+
+    ## systemctl cat contents (prove all was reloaded and parsed)
+
+    # Example content:
+    #   $ systemctl cat logrotate.timer
+    #
+    #   # /usr/lib/systemd/system/logrotate.timer
+    #   [Unit]
+    #   Description=Daily rotation of log files
+    #   Documentation=man:logrotate(8) man:logrotate.conf(5)
+    #
+    #   [Timer]
+    #   OnCalendar=daily
+    #   RandomizedDelaySec=1h
+    #   Persistent=true
+    #
+    #   [Install]
+    #   WantedBy=timers.target
+    #
+    #   # /etc/systemd/system/logrotate.timer.d/dropin.conf
+    #   # Ansible managed
+    #   [Timer]
+    #   OnCalendar=daily
+    #   RandomizedDelaySec=1h
+    #   Persistent=true
+    # Example warnings
+    #   Warning: logrotate.timer changed on disk, the version systemd has loaded is outdated.
+    #   Failed to cat /etc/systemd/system/logrotate.timer.d/dropin.conf: No such file or directory
+
+    - name: "Molecule | Verify | Gather systemd logrotate.timer config"
+      ansible.builtin.command:
+        argv:
+          - "{{ __testing_systemctl_exec_path }}"
+          - "cat"
+          - "{{ __testing_systemd_timer_unit_name }}"
+      register: __testing_systemd_timer_unit_validation
+      changed_when: false
+      failed_when:
+        - __testing_systemd_timer_unit_validation is ansible.builtin.failed
+
+
+    - name: "Molecule | Verify | Assert systemd timer drop-in contains expected directives"
+      ansible.builtin.assert:
+        that:
+          - "__testing_systemd_timer_unit_dropin_file_path in  __testing_systemd_timer_unit_validation['stdout']"
+          - "'OnCalendar=hourly' in __testing_systemd_timer_unit_validation['stdout']"
+          - "'RandomizedDelaySec=30m' in __testing_systemd_timer_unit_validation['stdout']"
+          - "'Persistent=false' in __testing_systemd_timer_unit_validation['stdout']"
+          - "'Warning' not in __testing_systemd_timer_unit_validation['stdout']"
+          - "'Failed' not in __testing_systemd_timer_unit_validation['stdout']"
+        fail_msg: >-
+          The systemd timer config is missing expected directives or produces warnings/errors.
+          Actual content: {{ __testing_systemd_timer_unit_validation['stdout'] }}
+        success_msg: >-
+          The systemd timer config file contains expected directives and produces no warnings/errors.

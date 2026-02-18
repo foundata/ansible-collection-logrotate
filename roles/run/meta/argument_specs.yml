@@ -151,7 +151,6 @@ argument_specs:
         type: "dict"
         default: {}
 
-
       run_logrotate_timer_manage:
         description: |
           Controls whether the role manages the automatic logrotate scheduling.
@@ -169,57 +168,32 @@ argument_specs:
       run_logrotate_timer_settings:
         description: |
           Configuration for the systemd timer that triggers logrotate execution.
-
           This dictionary controls when and how often logrotate runs. These
           settings map to systemd timer unit directives and are applied via
           a drop-in override file.
 
+          Use standard systemd `[Timer]` directives as keys with their corresponding
+          values.
+
+          Dictionary structure:
+
+          - Keys: Standard systemd `[Timer]` directives.
+          - Values: Corresponding configuration values. Common options include:
+            - `OnCalendar`: Defines the schedule on which the logrotate timer is
+               triggered. Defaults to `daily`. An (at least) daily schedule is
+               recommended.
+            - `RandomizedDelaySec`: Adds a random delay before execution to avoid
+              simultaneous runs across systems.  Defaults to `1h`.
+            - `Persistent`: Ensures missed timer runs are executed at the next boot
+              if the system was powered off. Defaults to `true`. Recommended to keep
+              enabled to ensure log rotation occurs even after the system was
+              unavailable during a scheduled run.
+
+          Special cases:
+
+          - For boolean values, use `true`/`false` (these will be converted to strings
+            by the role as needed).
+
           Only effective when `run_logrotate_timer_manage` is `true`.
         type: "dict"
-        default:
-          schedule: "daily"
-          jitter: "1h"
-          catch_up: true
-        options:
-          schedule:
-            description: |
-              Defines how often logrotate is invoked by the systemd timer.
-              Maps to the `OnCalendar=` systemd timer directive.
-
-              An (at least) daily schedule is recommended. The actual rotation
-              frequency for individual log files is controlled by logrotate
-              configuration directives (e.g., `daily`, `weekly`, `monthly`),
-              not by this timer setting.
-            type: "str"
-            default: "daily"
-            choices:
-              - "hourly"
-              - "daily"
-              - "weekly"
-
-          jitter:
-            description: |
-              Adds a random delay (from 0 to the specified value) before each
-              timer activation. Maps to the `RandomizedDelaySec=` systemd directive.
-
-              This helps distribute load when multiple systems run logrotate
-              simultaneously. Set to `0` to disable jitter.
-            type: "str"
-            default: "1h"
-            choices:
-              - "0"
-              - "30m"
-              - "1h"
-              - "2h"
-              - "6h"
-              - "12h"
-
-          catch_up:
-            description: |
-              When enabled, systemd runs missed timer activations after system
-              downtime or suspend. Maps to the `Persistent=` systemd directive.
-
-              Recommended to keep enabled to ensure log rotation occurs even
-              after the system was unavailable during a scheduled run.
-            type: "bool"
-            default: true
+        default: {} # see __run_logrotate_timer_settings_defaults in vars/main.yml for the defaults

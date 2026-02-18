@@ -11,7 +11,7 @@
     - (__run_logrotate_packages_uninstall | ansible.builtin.length) > 0
 
 
-- name: "Setup | Uninstall | Remove drop-in config files (defaults + per-section)"
+- name: "Setup | Uninstall | Remove drop-in config files (defaults + per-section, systemd timer)"
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent

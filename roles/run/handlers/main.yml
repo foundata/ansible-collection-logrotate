@@ -17,9 +17,8 @@
   listen:
     - "run_logrotate: validate configuration"
 
-# FIXME check needed?
-- name: "Handlers | Reload systemd"
-  ansible.builtin.systemd:
+
+- name: "Handlers | systemd daemon-reload"
+  ansible.builtin.systemd_service:
     daemon_reload: true
-  listen:
-    - "run_logrotate: reload systemd"
+  listen: "run_logrotate: systemd daemon-reload"

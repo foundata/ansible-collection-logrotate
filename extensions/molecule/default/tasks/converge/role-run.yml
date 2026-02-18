@@ -29,6 +29,12 @@
             /usr/bin/killall -HUP foo1
             /usr/bin/killall -HUP bar2
 
+      run_logrotate_timer_manage: true
+      run_logrotate_timer_settings:
+        OnCalendar: "hourly"
+        RandomizedDelaySec: "30m"
+        Persistent: false
+
 
 - name: "Molecule | Converge | Set run_logrotate* role parameters as facts from __testing_state"
   ansible.builtin.set_fact:
