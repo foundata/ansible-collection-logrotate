@@ -9,19 +9,19 @@
 
 ## Preparation
 
-- name: "Molecule | Verify | Set run_logrotate* role parameters as facts from __testing_state"
+- name: "Molecule | Verify | Set run_logrotate_* parameters as facts from __testing_state"
   ansible.builtin.set_fact:
     "{{ item['key'] }}": "{{ item['value'] }}"
   loop: >-
     {{
-      __testing_state
+      (__testing_state | default({}, true))
       | ansible.builtin.dict2items
       | ansible.builtin.selectattr('key', 'match', '^run_logrotate_')
       | ansible.builtin.list
     }}
 
 
-- name: "Molecule | Verify | Set / overwrite other expected configuration or testing data "
+- name: "Molecule | Verify | Set other expected or needed facts"
   ansible.builtin.set_fact:
     __testing_section_dropin_file_path: "{{ __run_logrotate_config_dropin_dir_path }}/foo_bar"
     __testing_systemctl_exec_path: "/usr/bin/systemctl"
@@ -380,7 +380,8 @@
     #   OnCalendar=daily
     #   RandomizedDelaySec=1h
     #   Persistent=true
-    # Example warnings
+    #
+    # Example warnings:
     #   Warning: logrotate.timer changed on disk, the version systemd has loaded is outdated.
     #   Failed to cat /etc/systemd/system/logrotate.timer.d/dropin.conf: No such file or directory
 

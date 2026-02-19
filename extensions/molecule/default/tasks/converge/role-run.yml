@@ -1,6 +1,6 @@
 # Execute the collection role "run" against all driver-created instances.
 
-- name: "Molecule | Converge | Store run_logrotate* role parameters in __testing_state"
+- name: "Molecule | Converge | Store run_logrotate_* role parameters in __testing_state"
   ansible.builtin.include_tasks:
     file: "../tasks/state_update.yml"
   vars:
@@ -41,7 +41,7 @@
     "{{ item['key'] }}": "{{ item['value'] }}"
   loop: >-
     {{
-      __testing_state
+      (__testing_state | default({}, true))
       | ansible.builtin.dict2items
       | ansible.builtin.selectattr('key', 'match', '^run_logrotate_')
       | ansible.builtin.list
