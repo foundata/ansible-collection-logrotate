@@ -3,6 +3,18 @@
 This repository contains the `foundata.logrotate` Ansible Collection.
 
 
+<div align="center" id="project-readme-header">
+<br>
+<br>
+
+**⭐ Found this useful? Support open-source and star this project:**
+
+[![GitHub repository](https://img.shields.io/github/stars/foundata/ansible-collection-logrotate.svg)](https://github.com/foundata/ansible-collection-logrotate)
+
+<br>
+</div>
+
+
 
 ## Table of contents<a id="toc"></a>
 
