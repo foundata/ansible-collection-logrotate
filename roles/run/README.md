@@ -187,7 +187,7 @@ The following variables can be configured for this role:
 | `run_logrotate_config_defaults_dropin_file_name` | `str` | No | `"00-defaults"` | Filename of the drop-in configuration file placed in `/logrotate.d/` to define global defaults. Defaults to `00-defaults`. The `00-` prefix ensures the file is loaded early, allowing its settings be overridden by later configuration files.<br><br>If […](#variable-run_logrotate_config_defaults_dropin_file_name) |
 | `run_logrotate_config_sections` | `dict` | No | `{}` | Log rotation section definitions. Each section creates a drop-in configuration file in `/logrotate.d/`.<br><br>Dictionary structure:<br><br>- Keys: Section name (will create `/logrotate.d/`) - Values: Dictionary containing path(s) and rotation […](#variable-run_logrotate_config_sections) |
 | `run_logrotate_timer_manage` | `bool` | No | `true` | Controls whether the role manages the automatic logrotate scheduling.<br><br>When set to `true` (the default), the role configures the systemd timer unit for logrotate according to `run_logrotate_timer_settings`.<br><br>Note: This feature currently […](#variable-run_logrotate_timer_manage) |
-| `run_logrotate_timer_settings` | `dict` | No | `{}` | Configuration for the systemd timer that triggers logrotate execution. This dictionary controls when and how often logrotate runs. These settings map to systemd timer unit directives and are applied via a drop-in override file.<br><br>Use standard […](#variable-run_logrotate_timer_settings) |
+| `run_logrotate_timer_settings` | `dict` | No | `{}` | Configuration for the systemd timer that triggers logrotate execution. This dictionary controls when and how often logrotate runs.<br><br>These settings map to systemd timer unit directives and are applied via a drop-in override file. They take […](#variable-run_logrotate_timer_settings) |
 
 ### `run_logrotate_state`<a id="variable-run_logrotate_state"></a>
 
@@ -380,9 +380,12 @@ platform's default scheduling mechanism remains unchanged.
 [*⇑ Back to ToC ⇑*](#toc)
 
 Configuration for the systemd timer that triggers logrotate execution.
-This dictionary controls when and how often logrotate runs. These
-settings map to systemd timer unit directives and are applied via
-a drop-in override file.
+This dictionary controls when and how often logrotate runs.
+
+These settings map to systemd timer unit directives and are applied via
+a drop-in override file. They take highest priority, overriding internal
+defaults (see `__run_logrotate_timer_settings_defaults` in `vars/main.yml`)
+and platform-specific overrides.
 
 Use standard systemd `[Timer]` directives as keys with their corresponding
 values.

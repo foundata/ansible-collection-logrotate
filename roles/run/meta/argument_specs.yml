@@ -168,9 +168,12 @@ argument_specs:
       run_logrotate_timer_settings:
         description: |
           Configuration for the systemd timer that triggers logrotate execution.
-          This dictionary controls when and how often logrotate runs. These
-          settings map to systemd timer unit directives and are applied via
-          a drop-in override file.
+          This dictionary controls when and how often logrotate runs.
+
+          These settings map to systemd timer unit directives and are applied via
+          a drop-in override file. They take highest priority, overriding internal
+          defaults (see `__run_logrotate_timer_settings_defaults` in `vars/main.yml`)
+          and platform-specific overrides.
 
           Use standard systemd `[Timer]` directives as keys with their corresponding
           values.
