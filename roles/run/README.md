@@ -1,6 +1,7 @@
 # Ansible role: `foundata.logrotate.run`
 
-The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansible collection).
+The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansible collection). It provides automated management of [logrotate](https://github.com/logrotate/logrotate) configuration.
+
 
 
 
