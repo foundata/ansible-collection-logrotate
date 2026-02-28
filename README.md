@@ -29,7 +29,7 @@ This repository contains the `foundata.logrotate` Ansible Collection. It provide
 
 ### Role: `foundata.logrotate.run`
 
-See the [role's `README.md`](./roles/run/README.md) for more information and usage examples.
+The primary resource in this collection to configure and maintain logrotate, including rotation policies, schedules,compression, and related settings. See the [role's `README.md`](./roles/run/README.md) for more information and usage examples.
 
 
 
