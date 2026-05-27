@@ -9,14 +9,14 @@
 
 ## Preparation
 
-- name: "Molecule | Verify | Set run_logrotate_* parameters as facts from __testing_state"
+- name: "Molecule | Verify | Set run_logrotate_* and __testing_* variables as facts from __testing_state"
   ansible.builtin.set_fact:
     "{{ item['key'] }}": "{{ item['value'] }}"
   loop: >-
     {{
       (__testing_state | default({}, true))
       | ansible.builtin.dict2items
-      | ansible.builtin.selectattr('key', 'match', '^run_logrotate_')
+      | ansible.builtin.selectattr('key', 'match', '^(run_logrotate_|__testing_)')
       | ansible.builtin.list
     }}
 
@@ -27,7 +27,7 @@
     __testing_systemctl_exec_path: "/usr/bin/systemctl"
 
 
-## Defaults drop-in file existence
+## Defaults drop-in file
 
 - name: "Molecule | Verify | Check if logrotate drop-in config file (logrotate defaults) exists"
   ansible.builtin.stat:
@@ -73,7 +73,7 @@
     - __run_logrotate_config_defaults_dropin_file_path != __run_logrotate_config_defaults_dropin_file_path_default
 
 
-## Custom drop-in file existence
+## Custom drop-in file
 
 - name: "Molecule | Verify | Check if section drop-in config file exists"
   ansible.builtin.stat:
@@ -90,8 +90,6 @@
     success_msg: >-
       The section drop-in config file '{{ __testing_section_dropin_file_path }}' exists.
 
-
-## Custom drop-in file contents
 
 - name: "Molecule | Verify | Read section drop-in config file content"
   ansible.builtin.slurp:
@@ -207,7 +205,7 @@
       is valid.
 
 
-## systemd timer existence + active/enabled verification
+## systemd timer
 
 - name: "Molecule | Verify | Fail on unsupported service manager for timer configuration"
   ansible.builtin.fail:
@@ -311,7 +309,7 @@
           Timer '{{ __testing_systemd_timer_unit_name }}' is 'enabled'.
 
 
-    ## systemd timer drop-in file existence
+    ## systemd timer drop-in file
 
     - name: "Molecule | Verify | Check if systemd timer drop-in config file exists"
       ansible.builtin.stat:
@@ -328,8 +326,6 @@
         success_msg: >-
           The systemd timer drop-in config file '{{ __testing_systemd_timer_unit_dropin_file_path }}' exists.
 
-
-    ## systemd timer drop-in file contents
 
     - name: "Molecule | Verify | Read systemd timer drop-in config file content"
       ansible.builtin.slurp:
