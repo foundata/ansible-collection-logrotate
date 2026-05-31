@@ -50,6 +50,24 @@
     - "run_logrotate_config"
 
 
+- name: "Main | Include service or daemon management tasks: best platform matches (if any), then default"
+  ansible.builtin.include_tasks:
+    file: "{{ __run_logrotate_task_file }}"
+    apply:
+      tags:
+        - "run_logrotate_service"
+  vars:
+    __run_logrotate_task_file: "{{ role_path }}/tasks/service/{{ __run_logrotate_loop_item }}"
+  when:
+    - run_logrotate_state == 'present'
+    - __run_logrotate_task_file is ansible.builtin.file
+  loop: "{{ __run_logrotate_platform_filenames_most_specific_first + ['default.yml'] }}"
+  loop_control:
+    loop_var: "__run_logrotate_loop_item"
+  tags:
+    - "run_logrotate_service"
+
+
 - name: "Main | Include setup tasks (uninstall): best platform matches (if any), then default"
   ansible.builtin.include_tasks:
     file: "{{ __run_logrotate_task_file }}"

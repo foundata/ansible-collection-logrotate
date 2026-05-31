@@ -31,6 +31,37 @@ run_logrotate_state: "present"
 # - Default: false
 run_logrotate_autoupgrade: false
 
+
+# Defines the status of the service(s) the role manages. For logrotate this is
+# the systemd `logrotate.timer` unit that triggers periodic log rotation; the
+# term "service" is used generically and also covers such timer units.
+#
+# Possible values:
+#
+# - `enabled`: Service is running and will start automatically at boot.
+# - `disabled`: Service is stopped and will not start automatically at boot.
+# - `running`: Service is running but will not start automatically at boot. This
+#   can be used to start a service on the first Ansible run without enabling it
+#   for boot.
+# - `unmanaged`: Service will not start at boot, and Ansible will not manage its
+#   running state. This is primarily useful when services are monitored and
+#   managed by systems other than Ansible.
+#
+# The singular form ("service") is used for simplicity. However, the defined
+# status applies to all services if multiple are being managed by this role.
+#
+# Note: This is only effective on systemd-managed systems and when
+# `run_logrotate_state` is `present`. It controls the timer's enablement and run
+# state; the timer's schedule is configured separately via
+# `run_logrotate_timer_manage` and `run_logrotate_timer_settings`.
+#
+# - Type: str
+# - Required: No
+# - Default: enabled
+# - Choices: enabled, disabled, running, unmanaged
+run_logrotate_service_state: "enabled"
+
+
 # Global logrotate default directives for all sections.
 #
 # This dictionary defines logrotate directives that apply globally and are

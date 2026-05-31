@@ -13,6 +13,7 @@ The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansi
 - [Role variables](#variables)
   - [`run_logrotate_state`](#variable-run_logrotate_state)
   - [`run_logrotate_autoupgrade`](#variable-run_logrotate_autoupgrade)
+  - [`run_logrotate_service_state`](#variable-run_logrotate_service_state)
   - [`run_logrotate_config_defaults`](#variable-run_logrotate_config_defaults)
   - [`run_logrotate_config_defaults_dropin_file_name`](#variable-run_logrotate_config_defaults_dropin_file_name)
   - [`run_logrotate_config_sections`](#variable-run_logrotate_config_sections)
@@ -184,6 +185,7 @@ The following variables can be configured for this role:
 |----------|------|----------|---------|------------------------|
 | `run_logrotate_state` | `str` | No | `"present"` | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_logrotate_state) |
 | `run_logrotate_autoupgrade` | `bool` | No | `false` | If set to `true`, all managed packages will be upgraded during each Ansible run (e.g., when the package provider detects a newer version than the currently installed one). |
+| `run_logrotate_service_state` | `str` | No | `"enabled"` | Defines the status of the service(s) the role manages. For logrotate this is the systemd `logrotate.timer` unit that triggers periodic log rotation; the term "service" is used generically and also covers such timer units.<br><br>Possible […](#variable-run_logrotate_service_state) |
 | `run_logrotate_config_defaults` | `dict` | No | `{}` | Global logrotate default directives for all sections.<br><br>This dictionary defines logrotate directives that apply globally and are written to the drop-in file specified by `run_logrotate_config_defaults_dropin_file_name` in […](#variable-run_logrotate_config_defaults) |
 | `run_logrotate_config_defaults_dropin_file_name` | `str` | No | `"00-defaults"` | Filename of the drop-in configuration file placed in `/logrotate.d/` to define global defaults. Defaults to `00-defaults`. The `00-` prefix ensures the file is loaded early, allowing its settings be overridden by later configuration files.<br><br>If […](#variable-run_logrotate_config_defaults_dropin_file_name) |
 | `run_logrotate_config_sections` | `dict` | No | `{}` | Log rotation section definitions. Each section creates a drop-in configuration file in `/logrotate.d/`.<br><br>Dictionary structure:<br><br>- Keys: Section name (will create `/logrotate.d/`) - Values: Dictionary containing path(s) and rotation […](#variable-run_logrotate_config_sections) |
@@ -220,6 +222,40 @@ currently installed one).
 - **Type**: `bool`
 - **Required**: No
 - **Default**: `false`
+
+
+
+### `run_logrotate_service_state`<a id="variable-run_logrotate_service_state"></a>
+
+[*⇑ Back to ToC ⇑*](#toc)
+
+Defines the status of the service(s) the role manages. For logrotate this is
+the systemd `logrotate.timer` unit that triggers periodic log rotation; the
+term "service" is used generically and also covers such timer units.
+
+Possible values:
+
+- `enabled`: Service is running and will start automatically at boot.
+- `disabled`: Service is stopped and will not start automatically at boot.
+- `running`: Service is running but will not start automatically at boot.
+  This can be used to start a service on the first Ansible run without
+  enabling it for boot.
+- `unmanaged`: Service will not start at boot, and Ansible will not
+  manage its running state. This is primarily useful when services are
+  monitored and managed by systems other than Ansible.
+
+The singular form ("service") is used for simplicity. However, the defined
+status applies to all services if multiple are being managed by this role.
+
+Note: This is only effective on systemd-managed systems and when
+`run_logrotate_state` is `present`. It controls the timer's enablement and
+run state; the timer's schedule is configured separately via
+`run_logrotate_timer_manage` and `run_logrotate_timer_settings`.
+
+- **Type**: `str`
+- **Required**: No
+- **Default**: `"enabled"`
+- **Choices**: `enabled`, `disabled`, `running`, `unmanaged`
 
 
 

@@ -1,0 +1,21 @@
+# Services and daemons: Manage their state, configure, or create them.
+
+---
+
+# The "service" managed here is the systemd timer that triggers periodic log
+# rotation (logrotate.timer). The timer's schedule (drop-in) is managed
+# separately in tasks/config/ via run_logrotate_timer_manage /
+# run_logrotate_timer_settings.
+
+- name: "Service | Default | Apply pending systemd changes before managing the timer"
+  ansible.builtin.meta: "flush_handlers"
+
+
+- name: "Service | Default | Ensure timer state: {{ __run_logrotate_systemd_timer_unit_name }}"
+  ansible.builtin.systemd_service:
+    name: "{{ __run_logrotate_systemd_timer_unit_name }}"
+    state: "{{ 'started' if run_logrotate_service_state in ['enabled', 'running'] else 'stopped' if run_logrotate_service_state == 'disabled' }}"
+    enabled: "{{ true if run_logrotate_service_state == 'enabled' else false if run_logrotate_service_state in ['disabled', 'running'] }}"
+  when:
+    - run_logrotate_service_state != 'unmanaged'
+    - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'

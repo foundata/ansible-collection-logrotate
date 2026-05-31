@@ -7,6 +7,7 @@
     __testing_state_update:
       # set all role configuration variables
       run_logrotate_state: "present"
+      run_logrotate_service_state: "enabled"
       run_logrotate_config_defaults:
         rotate: 5
         weekly: true
