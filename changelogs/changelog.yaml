@@ -1,6 +1,25 @@
 ---
 ancestor: null
 releases:
+  1.2.0:
+    changes:
+      minor_changes:
+        - '``run`` - Added the ``run_logrotate_service_state`` parameter (``enabled``/``disabled``/``running``/``unmanaged``,
+          default ``enabled``) to explicitly manage the enablement and run state of
+          the systemd ``logrotate.timer``. Previously the role relied on the timer''s
+          vendor preset and provided no way to disable it or leave it unmanaged.
+
+          '
+      release_summary: 'Release Date: 2026-05-31
+
+
+        Feature release.
+
+        '
+    fragments:
+      - 1.2.0-release.yaml
+      - run_logrotate-add-service_state.yaml
+    release_date: '2026-05-31'
   1.1.0:
     changes:
       minor_changes:

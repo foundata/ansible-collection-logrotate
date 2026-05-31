@@ -4,6 +4,21 @@ foundata.logrotate Ansible collection Release Notes
 
 .. contents:: Topics
 
+v1.2.0
+======
+
+Release Summary
+---------------
+
+Release Date: 2026-05-31
+
+Feature release.
+
+Minor Changes
+-------------
+
+- ``run`` - Added the ``run_logrotate_service_state`` parameter (``enabled``/``disabled``/``running``/``unmanaged``, default ``enabled``) to explicitly manage the enablement and run state of the systemd ``logrotate.timer``. Previously the role relied on the timer's vendor preset and provided no way to disable it or leave it unmanaged.
+
 v1.1.0
 ======
 
