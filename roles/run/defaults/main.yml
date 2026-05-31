@@ -66,8 +66,8 @@ run_logrotate_service_state: "enabled"
 #
 # This dictionary defines logrotate directives that apply globally and are
 # written to the drop-in file specified by
-# `run_logrotate_config_defaults_dropin_file_name` in `<config
-# dir>/logrotate.d/`.
+# `run_logrotate_config_defaults_dropin_file_name` in
+# `<config dir>/logrotate.d/`.
 #
 # All standard logrotate directives may be used as keys. Use `true` as the value
 # for directives that take no arguments. No log file paths must be specified
@@ -86,14 +86,14 @@ run_logrotate_service_state: "enabled"
 # - Default: {}
 run_logrotate_config_defaults: {}
 
-# Filename of the drop-in configuration file placed in `<config
-# dir>/logrotate.d/` to define global defaults. Defaults to `00-defaults`. The
-# `00-` prefix ensures the file is loaded early, allowing its settings be
-# overridden by later configuration files.
+# Filename of the drop-in configuration file placed in
+# `<config dir>/logrotate.d/` to define global defaults. Defaults to
+# `00-defaults`. The `00-` prefix ensures the file is loaded early, allowing its
+# settings be overridden by later configuration files.
 #
-# If a non-default filename is used, any existing `<config
-# dir>/logrotate.d/00-defaults` from previous Ansible runs will be removed
-# automatically to prevent conflicts.
+# If a non-default filename is used, any existing
+# `<config dir>/logrotate.d/00-defaults` from previous Ansible runs will be
+# removed automatically to prevent conflicts.
 #
 # - Type: str
 # - Required: No
@@ -174,8 +174,8 @@ run_logrotate_config_defaults_dropin_file_name: "00-defaults"
 #
 # The official documentation provides general configuration guidance:
 #
-# -
-# -
+# - [`man logrotate`](https://manpages.debian.org/testing/logrotate/logrotate.8.en.html)
+# - [Configuration file directives](https://manpages.debian.org/testing/logrotate/logrotate.8.en.html#CONFIGURATION_FILE_DIRECTIVES)
 #
 # - Type: dict
 # - Required: No
