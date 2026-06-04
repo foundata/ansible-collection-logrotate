@@ -103,7 +103,7 @@ __run_logrotate_paths_neutralize: {}
 
 # Additional default configuration for the logrotate timer.
 #
-# See run_logrotate_timer_settings in defaults/main.yml for a detailled
+# See run_logrotate_timer_settings in defaults/main.yml for a detailed
 # description of the structure (as this variable is using the same).
 __run_logrotate_timer_settings_defaults:
   OnCalendar: "daily"
