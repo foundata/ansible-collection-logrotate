@@ -130,13 +130,12 @@
 ### logrotate specific
 
 
-- name: "Init | Merge user and default settings"
-  ansible.builtin.set_fact:
-    # systemd directives are case-sensitive. Since Ansible dict keys are also
-    # case-sensitive, a simple dict_a | ansible.builtin.combine(dict_b) correctly
-    # allows user settings to override defaults without extra handling.
-    __run_logrotate_effective_timer_settings: >-
-      {{
-        __run_logrotate_timer_settings_defaults
-        | ansible.builtin.combine(run_logrotate_timer_settings)
-      }}
+- name: "Init | Show effective merged variables (computed lazily in vars/main.yml)"
+  ansible.builtin.debug:
+    msg: "{{ __run_logrotate_effective_var }} = {{ lookup('ansible.builtin.vars', __run_logrotate_effective_var) }}"
+    verbosity: 3
+  loop:
+    - "__run_logrotate_effective_timer_settings"
+  loop_control:
+    loop_var: "__run_logrotate_effective_var"
+    label: "{{ __run_logrotate_effective_var }}"

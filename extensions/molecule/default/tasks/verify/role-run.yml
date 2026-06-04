@@ -407,3 +407,42 @@
           Actual content: {{ __testing_systemd_timer_unit_validation['stdout'] }}
         success_msg: >-
           The systemd timer config file contains expected directives and produces no warnings/errors.
+
+
+## Init-only merged variable evaluation
+#
+# Re-run the role's init with controlled inputs and assert the merged timer
+# settings directly (whether materialized in tasks/init.yml or lazily in
+# vars/main.yml): a user value must win, the untouched defaults must survive,
+# and a user-only key must be added.
+#
+# Inputs are set via set_fact so they outrank the converge-time facts restored
+# at the top of this file and stay in scope when the assertion dereferences the
+# (lazily evaluated) effective variable.
+
+- name: "Molecule | Verify | Validate effective timer settings merge (init-only)"
+  block:
+
+    - name: "Molecule | Verify | Set custom timer settings for the merge check"
+      ansible.builtin.set_fact:
+        run_logrotate_timer_settings:
+          RandomizedDelaySec: "13m"
+          FooDirective: "bar"
+
+
+    - name: "Molecule | Verify | Re-initialize logrotate with custom timer settings"
+      ansible.builtin.include_role:
+        name: "foundata.logrotate.run"
+        tasks_from: "init"
+        public: true
+
+
+    - name: "Molecule | Verify | Assert effective timer settings merged correctly"
+      ansible.builtin.assert:
+        that:
+          - __run_logrotate_effective_timer_settings['RandomizedDelaySec'] == "13m"
+          - __run_logrotate_effective_timer_settings['OnCalendar'] == "daily"
+          - __run_logrotate_effective_timer_settings['Persistent'] | ansible.builtin.bool
+          - __run_logrotate_effective_timer_settings['FooDirective'] == "bar"
+        fail_msg: "__run_logrotate_effective_timer_settings did not merge defaults and user values as expected."
+        success_msg: "__run_logrotate_effective_timer_settings merged defaults and user values correctly."
