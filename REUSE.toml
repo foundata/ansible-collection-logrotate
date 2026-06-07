@@ -1,6 +1,6 @@
 version = 1
 SPDX-PackageName = "Ansible collection: foundata.logrotate"
-SPDX-PackageDownloadLocation = "https://github.com/foundata/ansible-collection-logrotate"
+SPDX-PackageDownloadLocation = "https://foundata.com/en/projects/ansible-collection-logrotate/#releases"
 SPDX-PackageSupplier = "foundata GmbH"
 SPDX-PackageComment = """
 This project may include calls to Application Programming Interfaces
