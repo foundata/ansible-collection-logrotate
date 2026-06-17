@@ -1,0 +1,8 @@
+---
+
+bugfixes:
+  - >
+    ``run`` role - A previously managed systemd timer drop-in is now removed when
+    ``run_logrotate_timer_manage`` is set back to ``false`` (on systemd hosts),
+    so an old role-managed schedule no longer keeps applying silently. Before,
+    the drop-in was only removed on a full uninstall.

@@ -141,6 +141,17 @@
         - "run_logrotate: systemd daemon-reload"
 
 
+- name: "Config | Default | Remove managed systemd timer drop-in when timer management is disabled"
+  ansible.builtin.file:
+    path: "{{ __run_logrotate_systemd_timer_unit_dropin_file_path }}"
+    state: "absent"
+  when:
+    - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'
+    - not run_logrotate_timer_manage
+  notify:
+    - "run_logrotate: systemd daemon-reload"
+
+
 - name: "Config | Default | Warn about unsupported service manager for timer configuration"
   ansible.builtin.debug:
     msg: >-
