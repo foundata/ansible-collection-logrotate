@@ -29,7 +29,27 @@ This repository contains the `foundata.logrotate` Ansible Collection. It provide
 
 ### Role: `foundata.logrotate.run`
 
-The primary resource in this collection to configure and maintain logrotate, including rotation policies, schedules,compression, and related settings. See the [role's `README.md`](./roles/run/README.md) for more information and usage examples.
+The primary role in this collection to configure and maintain logrotate, including rotation policies, schedules,compression, and related settings. [Its `README.md`](./roles/run/README.md) covers configuration, usage examples, and more:
+
+<!-- ANSIBLE DOCSMITH TOC-FULL run START -->
+- [Ansible role: `foundata.logrotate.run`](roles/run/README.md#ansible-role-foundatalogrotaterun)
+  - [Table of contents](roles/run/README.md#toc)
+  - [Features](roles/run/README.md#features)
+  - [Example playbooks, using this role](roles/run/README.md#examples)
+  - [Supported tags](roles/run/README.md#tags)
+  - [Role variables](roles/run/README.md#variables)
+    - [`run_logrotate_state`](roles/run/README.md#variable-run_logrotate_state)
+    - [`run_logrotate_autoupgrade`](roles/run/README.md#variable-run_logrotate_autoupgrade)
+    - [`run_logrotate_service_state`](roles/run/README.md#variable-run_logrotate_service_state)
+    - [`run_logrotate_config_defaults`](roles/run/README.md#variable-run_logrotate_config_defaults)
+    - [`run_logrotate_config_defaults_dropin_file_name`](roles/run/README.md#variable-run_logrotate_config_defaults_dropin_file_name)
+    - [`run_logrotate_config_sections`](roles/run/README.md#variable-run_logrotate_config_sections)
+    - [`run_logrotate_timer_manage`](roles/run/README.md#variable-run_logrotate_timer_manage)
+    - [`run_logrotate_timer_settings`](roles/run/README.md#variable-run_logrotate_timer_settings)
+  - [Dependencies](roles/run/README.md#dependencies)
+  - [Compatibility](roles/run/README.md#compatibility)
+  - [External requirements](roles/run/README.md#requirements)
+<!-- ANSIBLE DOCSMITH TOC-FULL run END -->
 
 
 
