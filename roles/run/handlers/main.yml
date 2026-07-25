@@ -21,4 +21,5 @@
 - name: "Handlers | systemd daemon-reload"
   ansible.builtin.systemd_service:
     daemon_reload: true
-  listen: "run_logrotate: systemd daemon-reload"
+  listen:
+    - "run_logrotate: systemd daemon-reload"
