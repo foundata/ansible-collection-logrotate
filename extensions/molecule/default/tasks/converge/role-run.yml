@@ -41,6 +41,8 @@
         # list in systemd, so this guards against a reset that wipes the
         # calendar trigger rendered before it.
         OnActiveSec: "7d"
+        # boolean event trigger, guarding the third value kind of the contract
+        OnClockChange: true
         RandomizedDelaySec: "30m"
         Persistent: false
 

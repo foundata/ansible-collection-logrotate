@@ -22,6 +22,9 @@ __run_logrotate_used_facts:
     - "distribution_major_version"
     - "distribution_version"
     - "os_family"
+  # ansible_facts['service_mgr']; needed under reduced fact sets.
+  service_mgr:
+    - "service_mgr"
 
 
 # List of platforms this role supports and was designed for.
