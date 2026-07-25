@@ -32,7 +32,11 @@
 
       run_logrotate_timer_manage: true
       run_logrotate_timer_settings:
-        OnCalendar: "hourly"
+        # A list renders one assignment per item after the single shared reset,
+        # so this also guards that repeatable triggers are not stringified.
+        OnCalendar:
+          - "hourly"
+          - "Sat,Sun 05:00"
         # A second trigger of a different kind: all trigger directives share one
         # list in systemd, so this guards against a reset that wipes the
         # calendar trigger rendered before it.

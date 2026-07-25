@@ -351,6 +351,27 @@
         success_msg: >-
           The systemd timer drop-in config file contains expected directives.
 
+    # All trigger directives share one list in systemd, so the drop-in must carry
+    # exactly ONE empty reset line: a second one would wipe the triggers rendered
+    # before it. The two configured OnCalendar values must therefore appear as two
+    # assignments after that single reset.
+    - name: "Molecule | Verify | Assert the timer drop-in carries exactly one trigger reset"
+      ansible.builtin.assert:
+        that:
+          - >-
+            (__testing_systemd_timer_unit_dropin_decoded | ansible.builtin.regex_findall('(?m)^OnCalendar=$')
+             | ansible.builtin.length) == 1
+          - >-
+            (__testing_systemd_timer_unit_dropin_decoded | ansible.builtin.regex_findall('(?m)^OnCalendar=.+$')
+             | ansible.builtin.length) == 2
+        fail_msg: >-
+          The rendered timer drop-in must contain exactly one empty 'OnCalendar=' reset line
+          followed by the two configured expressions.
+          Actual content: {{ __testing_systemd_timer_unit_dropin_decoded }}
+        success_msg: >-
+          The rendered timer drop-in carries exactly one trigger reset followed by both
+          configured OnCalendar expressions.
+
 
     ## systemctl cat contents (prove all was reloaded and parsed)
 
@@ -437,12 +458,14 @@
           - "'*-*-* *:00:00' in __testing_systemd_timer_calendar['stdout']"
           # the vendor "daily" schedule must be gone, not merely outranked
           - "'*-*-* 00:00:00' not in __testing_systemd_timer_calendar['stdout']"
+          - "'05:00:00' in __testing_systemd_timer_calendar['stdout']"
+          # both configured expressions, and nothing from the vendor unit
           - >-
             (__testing_systemd_timer_calendar['stdout']
              | ansible.builtin.regex_findall('OnCalendar=')
-             | ansible.builtin.length) == 1
+             | ansible.builtin.length) == 2
           # the configured monotonic trigger must survive next to the calendar one
-          - "'OnActiveUSec=' in __testing_systemd_timer_calendar['stdout']"
+          - "'OnActiveUSec=1w' in __testing_systemd_timer_calendar['stdout']"
         fail_msg: >-
           The effective timer schedule does not consist of exactly the configured OnCalendar entry.
           The vendor schedule is most likely accumulating with the managed one.
