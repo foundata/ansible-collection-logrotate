@@ -1,0 +1,12 @@
+---
+
+minor_changes:
+  - >
+    ``run`` role - The keys of ``run_logrotate_config_sections`` are now checked
+    to yield unique, non-empty drop-in filenames. They are normalized to
+    lowercase with every character outside ``a-z0-9._`` replaced, so keys that
+    differ only in case or in such characters (for example ``My App`` and
+    ``my_app``, or ``a-b`` and ``a_b``) previously ended up in the same file and
+    silently overwrote each other, and a key consisting only of such characters
+    collapsed to an empty filename. Such configurations now fail with a message
+    naming the normalized filenames instead of losing a section.

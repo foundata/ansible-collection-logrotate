@@ -140,3 +140,36 @@
   loop_control:
     loop_var: "__run_logrotate_effective_var"
     label: "{{ __run_logrotate_effective_var }}"
+
+
+# Section keys are normalized into drop-in filenames. Unlike fail2ban filter
+# names these are opaque (logrotate reads the whole directory), so the key does
+# not have to survive normalization unchanged. It must however still yield a
+# non-empty and unique basename: a key consisting only of separators collapses
+# to an empty name, and two keys differing only in case or in characters that
+# get replaced end up in the same file, silently overwriting each other.
+- name: "Init | Assert drop-in section names yield unique, non-empty filenames"
+  ansible.builtin.assert:
+    that:
+      - __run_logrotate_section_filenames | ansible.builtin.select('equalto', '') | ansible.builtin.list | ansible.builtin.length == 0
+      - (__run_logrotate_section_filenames | ansible.builtin.length)
+        == (__run_logrotate_section_filenames | ansible.builtin.unique | ansible.builtin.length)
+    fail_msg: >-
+      The keys of 'run_logrotate_config_sections' do not map to unique, non-empty drop-in
+      filenames. They are normalized to lowercase and every character outside 'a-z0-9._' is
+      replaced, so keys that differ only in case or in such characters collide and would
+      overwrite each other. Normalized names: {{ __run_logrotate_section_filenames }}.
+    success_msg: >-
+      All keys of 'run_logrotate_config_sections' map to unique, non-empty drop-in filenames.
+  vars:
+    __run_logrotate_section_filenames: >-
+      {{
+        (run_logrotate_config_sections | ansible.builtin.default({})).keys()
+        | ansible.builtin.map('ansible.builtin.lower')
+        | ansible.builtin.map('ansible.builtin.regex_replace', '[^a-z0-9._]', '_')
+        | ansible.builtin.map('ansible.builtin.regex_replace', '_+', '_')
+        | ansible.builtin.map('ansible.builtin.regex_replace', '^_|_$', '')
+        | ansible.builtin.list
+      }}
+  when:
+    - ((run_logrotate_config_sections | ansible.builtin.default({})) | ansible.builtin.length) > 0
