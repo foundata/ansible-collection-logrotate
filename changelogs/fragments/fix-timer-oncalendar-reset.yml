@@ -2,11 +2,15 @@
 
 bugfixes:
   - >
-    ``run`` role - The systemd timer drop-in now resets list-typed directives
-    before setting them, so a configured ``OnCalendar`` in
+    ``run`` role - The systemd timer drop-in now emits exactly one reset line
+    before the configured trigger directives, so a configured ``OnCalendar`` in
     ``run_logrotate_timer_settings`` replaces the schedule of the vendor
     ``logrotate.timer`` instead of accumulating with it. Such directives add up
     across a unit and its drop-ins (see ``systemd.unit(5)``), so the timer
     previously kept the vendor ``OnCalendar=daily`` entry next to the configured
     one and ran on both schedules. Setting a less frequent schedule than the
     vendor default therefore had no effect.
+    All trigger directives (``OnCalendar``, ``OnActiveSec``, ``OnBootSec``, ...)
+    share a single trigger list, so one reset per directive would make each reset
+    wipe the triggers rendered before it and only the last configured trigger
+    would survive.

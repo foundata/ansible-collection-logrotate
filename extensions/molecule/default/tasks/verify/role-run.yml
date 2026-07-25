@@ -424,6 +424,7 @@
           - "{{ __testing_systemctl_exec_path }}"
           - "show"
           - "--property=TimersCalendar"
+          - "--property=TimersMonotonic"
           - "{{ __testing_systemd_timer_unit_name }}"
       register: __testing_systemd_timer_calendar
       changed_when: false
@@ -440,6 +441,8 @@
             (__testing_systemd_timer_calendar['stdout']
              | ansible.builtin.regex_findall('OnCalendar=')
              | ansible.builtin.length) == 1
+          # the configured monotonic trigger must survive next to the calendar one
+          - "'OnActiveUSec=' in __testing_systemd_timer_calendar['stdout']"
         fail_msg: >-
           The effective timer schedule does not consist of exactly the configured OnCalendar entry.
           The vendor schedule is most likely accumulating with the managed one.

@@ -33,6 +33,10 @@
       run_logrotate_timer_manage: true
       run_logrotate_timer_settings:
         OnCalendar: "hourly"
+        # A second trigger of a different kind: all trigger directives share one
+        # list in systemd, so this guards against a reset that wipes the
+        # calendar trigger rendered before it.
+        OnActiveSec: "7d"
         RandomizedDelaySec: "30m"
         Persistent: false
 
