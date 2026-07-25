@@ -1,0 +1,12 @@
+---
+
+bugfixes:
+  - >
+    ``run`` role - The systemd timer drop-in now resets list-typed directives
+    before setting them, so a configured ``OnCalendar`` in
+    ``run_logrotate_timer_settings`` replaces the schedule of the vendor
+    ``logrotate.timer`` instead of accumulating with it. Such directives add up
+    across a unit and its drop-ins (see ``systemd.unit(5)``), so the timer
+    previously kept the vendor ``OnCalendar=daily`` entry next to the configured
+    one and ran on both schedules. Setting a less frequent schedule than the
+    vendor default therefore had no effect.

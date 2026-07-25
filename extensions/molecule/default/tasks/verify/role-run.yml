@@ -409,6 +409,46 @@
           The systemd timer config file contains expected directives and produces no warnings/errors.
 
 
+    # "systemctl cat" only concatenates the unit and its drop-ins, so it still
+    # shows the vendor schedule next to the managed one and cannot prove which
+    # schedule is in effect. List-typed directives such as OnCalendar accumulate
+    # across a unit and its drop-ins, and the vendor logrotate.timer ships
+    # "OnCalendar=daily". Without the reset line the drop-in emits (see
+    # templates/systemd_timer.conf.j2), the configured schedule would be added
+    # to the vendor one instead of replacing it, so logrotate would keep
+    # rotating daily on top of the requested schedule. Query the effective
+    # schedule systemd actually computed and assert there is exactly one entry.
+    - name: "Molecule | Verify | Get the effective calendar schedule of the logrotate timer"
+      ansible.builtin.command:
+        argv:
+          - "{{ __testing_systemctl_exec_path }}"
+          - "show"
+          - "--property=TimersCalendar"
+          - "{{ __testing_systemd_timer_unit_name }}"
+      register: __testing_systemd_timer_calendar
+      changed_when: false
+
+
+    - name: "Molecule | Verify | Assert the timer drop-in replaces the vendor schedule instead of accumulating"
+      ansible.builtin.assert:
+        that:
+          # "hourly" normalizes to "*-*-* *:00:00" in the effective schedule
+          - "'*-*-* *:00:00' in __testing_systemd_timer_calendar['stdout']"
+          # the vendor "daily" schedule must be gone, not merely outranked
+          - "'*-*-* 00:00:00' not in __testing_systemd_timer_calendar['stdout']"
+          - >-
+            (__testing_systemd_timer_calendar['stdout']
+             | ansible.builtin.regex_findall('OnCalendar=')
+             | ansible.builtin.length) == 1
+        fail_msg: >-
+          The effective timer schedule does not consist of exactly the configured OnCalendar entry.
+          The vendor schedule is most likely accumulating with the managed one.
+          Actual: {{ __testing_systemd_timer_calendar['stdout'] }}
+        success_msg: >-
+          The effective timer schedule consists of exactly the configured OnCalendar entry
+          ({{ __testing_systemd_timer_calendar['stdout'] | ansible.builtin.trim }}).
+
+
 ## Init-only merged variable evaluation
 #
 # Re-run the role's init with controlled inputs and assert the merged timer
