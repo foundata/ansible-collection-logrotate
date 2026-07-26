@@ -2,37 +2,50 @@
 
 ---
 
-- name: "Setup | Uninstall | Remove drop-in config files (defaults + per-section, systemd timer)"
+# Fixed paths cover files written by releases without the ownership marker.
+- name: "Setup | Uninstall | Remove drop-in config files (defaults, systemd timer)"
   ansible.builtin.file:
     path: "{{ item }}"
     state: absent
-  vars:
-    __run_logrotate_paths_to_remove: >-
+  loop: >-
+    {{
+      [
+        __run_logrotate_config_defaults_dropin_file_path,
+        __run_logrotate_config_defaults_dropin_file_path_default,
+        __run_logrotate_systemd_timer_unit_dropin_file_path
+      ] | ansible.builtin.unique
+    }}
+
+
+- name: "Setup | Uninstall | Find files in the drop-in config directory"
+  ansible.builtin.find:
+    paths:
+      - "{{ __run_logrotate_config_dropin_dir_path }}"
+    file_type: "file"
+    hidden: true
+  register: __run_logrotate_find_result
+
+
+- name: "Setup | Uninstall | Determine files created by this role (ownership marker)"
+  ansible.builtin.command:
+    argv: >-
       {{
-        (
-          [
-            __run_logrotate_config_defaults_dropin_file_path,
-            __run_logrotate_config_defaults_dropin_file_path_default,
-            __run_logrotate_systemd_timer_unit_dropin_file_path
-          ]
-          +
-          (
-            run_logrotate_config_sections
-            | ansible.builtin.default({})
-            | ansible.builtin.dict2items
-            | ansible.builtin.map(attribute='key')
-            | ansible.builtin.map('lower')
-            | ansible.builtin.map('regex_replace', '[^a-z0-9._]', '_')
-            | ansible.builtin.map('regex_replace', '_+', '_')
-            | ansible.builtin.map('regex_replace', '^_|_$', '')
-            | ansible.builtin.map('regex_replace', '^(.*)$', __run_logrotate_config_dropin_dir_path ~ '/\\1')
-            | ansible.builtin.list
-          )
-        ) | ansible.builtin.unique
+        [__run_logrotate_grep_exec_path, '-l', '-s', '--', __run_logrotate_config_file_marker]
+        + (__run_logrotate_find_result['files'] | ansible.builtin.map(attribute='path') | ansible.builtin.list)
       }}
-  loop: "{{ __run_logrotate_paths_to_remove }}"
+  register: __run_logrotate_owned_result
+  changed_when: false
+  failed_when:
+    - __run_logrotate_owned_result['rc'] not in [0, 1, 2]
   when:
-    - __run_logrotate_paths_to_remove | ansible.builtin.length > 0
+    - (__run_logrotate_find_result['files'] | ansible.builtin.length) > 0
+
+
+- name: "Setup | Uninstall | Remove files created by this role"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: "absent"
+  loop: "{{ __run_logrotate_owned_result['stdout_lines'] | ansible.builtin.default([]) }}"
 
 
 - name: "Setup | Uninstall | Remove packages"

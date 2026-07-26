@@ -13,9 +13,12 @@
   - Script block directives (prerotate, postrotate, firstaction, lastaction,
     preremove) render with indented content and closing "endscript".
   - All other keys render as "directive value".
+
+  The first output line is the role's ownership marker (load-bearing for the
+  cleanup logic - do not change its format).
 -#}
 {%- from '_logrotate_macros.j2' import directives -%}
-
+{{ __run_logrotate_config_file_marker }}
 # {{ ansible_managed }}
 {%  set conf = tpl_section_conf | ansible.builtin.default({}) %}
 {%  set raw_content = (conf.get('content') if conf is mapping else none) %}

@@ -205,6 +205,89 @@
       is valid.
 
 
+## Reaping of stale role-created files (integration)
+#
+# Files whose keys were renamed or removed are identified by the ownership
+# marker line and removed by the role; files without the marker are never
+# touched. Plant a marker-bearing orphan plus a hand-made decoy without the
+# marker in the drop-in directory, re-run the role with the converge settings
+# and assert only the orphan is gone while the declared section and defaults
+# drop-in files survive.
+
+- name: "Molecule | Verify | Validate reaping of stale role-created files (integration)"
+  vars:
+    __testing_stale_section_path: "{{ __run_logrotate_config_dropin_dir_path }}/molecule-stale-section"
+    __testing_decoy_section_path: "{{ __run_logrotate_config_dropin_dir_path }}/molecule-admin-section"
+  block:
+
+    - name: "Molecule | Verify | Plant a stale marker-bearing file and a hand-made decoy"
+      ansible.builtin.copy:
+        content: "{{ item['content'] }}"
+        dest: "{{ item['dest'] }}"
+        owner: "root"
+        group: "root"
+        mode: "u=rw,g=r,o=r" # 0644
+      loop:
+        - dest: "{{ __testing_stale_section_path }}"
+          content: |
+            {{ __run_logrotate_config_file_marker }}
+            /var/log/molecule-test-stale.log {
+              missingok
+              rotate 1
+            }
+        - dest: "{{ __testing_decoy_section_path }}"
+          content: |
+            /var/log/molecule-test-decoy.log {
+              missingok
+              rotate 1
+            }
+      loop_control:
+        label: "{{ item['dest'] }}"
+
+    - name: "Molecule | Verify | Re-run the foundata.logrotate.run role"
+      ansible.builtin.include_role:
+        name: "foundata.logrotate.run"
+
+    - name: "Molecule | Verify | Flush the handlers notified by the cleanup"
+      ansible.builtin.meta: flush_handlers
+
+    - name: "Molecule | Verify | Get the status of the planted and declared files after the re-run"
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      register: __testing_reap_stat
+      loop:
+        - "{{ __testing_stale_section_path }}"
+        - "{{ __testing_decoy_section_path }}"
+        - "{{ __testing_section_dropin_file_path }}"
+        - "{{ __run_logrotate_config_defaults_dropin_file_path }}"
+
+    - name: "Molecule | Verify | Assert only the stale marker-bearing file was removed"
+      ansible.builtin.assert:
+        that:
+          - not __testing_reap_stat['results'][0]['stat']['exists']
+          - __testing_reap_stat['results'][1]['stat']['exists']
+          - __testing_reap_stat['results'][2]['stat']['exists']
+          - __testing_reap_stat['results'][3]['stat']['exists']
+        fail_msg: >-
+          The role did not reap exactly the stale marker-bearing file:
+          {{ __testing_reap_stat['results'] | ansible.builtin.map(attribute='stat.exists') | ansible.builtin.list }}
+          for {{ __testing_reap_stat['results'] | ansible.builtin.map(attribute='item') | ansible.builtin.list }}
+          (expected [false, true, true, true]).
+        success_msg: >-
+          The role removed the stale marker-bearing file and left the hand-made
+          decoy and the declared drop-in files untouched.
+
+  always:
+
+    - name: "Molecule | Verify | Remove the planted files again"
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: "absent"
+      loop:
+        - "{{ __testing_stale_section_path }}"
+        - "{{ __testing_decoy_section_path }}"
+
+
 ## systemd timer
 
 - name: "Molecule | Verify | Fail on unsupported service manager for timer configuration"

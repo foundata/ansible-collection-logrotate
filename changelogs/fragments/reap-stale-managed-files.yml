@@ -1,0 +1,18 @@
+---
+
+minor_changes:
+  - >
+    ``run`` role - Files created by the role in the shared drop-in directory
+    now start with an ownership marker line. Files carrying the marker whose
+    ``run_logrotate_config_sections`` key was renamed or removed (or whose
+    defaults drop-in filename changed) are now removed automatically;
+    package-shipped and hand-made files are never touched. Files created by
+    earlier releases do not carry the marker yet: still-declared ones get it
+    on the next run, already orphaned ones must be removed manually once.
+
+bugfixes:
+  - >
+    ``run`` role - ``run_logrotate_state: "absent"`` now removes all section
+    files created by the role (identified by the ownership marker). Before,
+    only files derivable from the current ``run_logrotate_config_sections``
+    value were removed, leaving files of removed or renamed keys behind.

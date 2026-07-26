@@ -149,9 +149,37 @@ __run_logrotate_config_dropin_file_mode: "{{ __run_logrotate_config_file_mode }}
 __run_logrotate_config_defaults_dropin_file_path: "{{ __run_logrotate_config_dropin_dir_path }}/{{ run_logrotate_config_defaults_dropin_file_name }}"
 __run_logrotate_config_defaults_dropin_file_path_default: "{{ __run_logrotate_config_dropin_dir_path }}/00-defaults" # needed to detect non-default names
 
+# Ownership marker, written as the first line of every file this role creates
+# in the shared drop-in directory. Load-bearing for the cleanup logic: only
+# files carrying this exact line are ever removed, files without it (package
+# or hand-made admin files) are never touched.
+__run_logrotate_config_file_marker: "# Managed by Ansible (foundata.logrotate.run)"
+
+# Drop-in basenames derived from the section keys. init.yml asserts the
+# normalization yields unique, non-empty names.
+__run_logrotate_config_section_file_names: >-
+  {{
+    (run_logrotate_config_sections | ansible.builtin.default({})).keys()
+    | ansible.builtin.map('ansible.builtin.lower')
+    | ansible.builtin.map('ansible.builtin.regex_replace', '[^a-z0-9._]', '_')
+    | ansible.builtin.map('ansible.builtin.regex_replace', '_+', '_')
+    | ansible.builtin.map('ansible.builtin.regex_replace', '^_|_$', '')
+    | ansible.builtin.list
+  }}
+
+# Files currently declared through role variables, kept by the cleanup logic.
+__run_logrotate_config_managed_file_paths: >-
+  {{
+    [__run_logrotate_config_defaults_dropin_file_path]
+    + (__run_logrotate_config_section_file_names
+       | ansible.builtin.map('ansible.builtin.regex_replace', '^', __run_logrotate_config_dropin_dir_path ~ '/')
+       | ansible.builtin.list)
+  }}
+
 
 # Paths of executables for management and validation.
 __run_logrotate_logrotate_exec_path: "/usr/sbin/logrotate"
+__run_logrotate_grep_exec_path: "/usr/bin/grep"
 
 
 # systemd logrotate timer (helpful: systemctl cat logrotate.timer)

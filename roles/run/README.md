@@ -388,6 +388,10 @@ The official documentation provides general configuration guidance:
 - [`man logrotate`](https://manpages.debian.org/testing/logrotate/logrotate.8.en.html)
 - [Configuration file directives](https://manpages.debian.org/testing/logrotate/logrotate.8.en.html#CONFIGURATION_FILE_DIRECTIVES)
 
+The role marks the resulting files with an ownership marker line and
+automatically removes files of keys that were later renamed or removed.
+Package-shipped and hand-made files are never touched.
+
 - **Type**: `dict`
 - **Required**: No
 - **Default**: `{}`

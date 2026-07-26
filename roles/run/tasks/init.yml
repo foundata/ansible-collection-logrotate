@@ -162,15 +162,7 @@
     success_msg: >-
       All keys of 'run_logrotate_config_sections' map to unique, non-empty drop-in filenames.
   vars:
-    __run_logrotate_section_filenames: >-
-      {{
-        (run_logrotate_config_sections | ansible.builtin.default({})).keys()
-        | ansible.builtin.map('ansible.builtin.lower')
-        | ansible.builtin.map('ansible.builtin.regex_replace', '[^a-z0-9._]', '_')
-        | ansible.builtin.map('ansible.builtin.regex_replace', '_+', '_')
-        | ansible.builtin.map('ansible.builtin.regex_replace', '^_|_$', '')
-        | ansible.builtin.list
-      }}
+    __run_logrotate_section_filenames: "{{ __run_logrotate_config_section_file_names }}"
   when:
     - ((run_logrotate_config_sections | ansible.builtin.default({})) | ansible.builtin.length) > 0
 
