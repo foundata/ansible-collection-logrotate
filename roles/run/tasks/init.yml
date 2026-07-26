@@ -53,10 +53,10 @@
     __run_logrotate_matched_versions: >-
       {{
         __run_logrotate_supported_platforms
-        | ansible.builtin.selectattr('name', 'match', __run_logrotate_platform_names_regex, ignorecase=true)
+        | ansible.builtin.selectattr('name', 'ansible.builtin.match', __run_logrotate_platform_names_regex, ignorecase=true)
         | ansible.builtin.map(attribute='versions')
         | ansible.builtin.flatten
-        | ansible.builtin.select('match', __run_logrotate_platform_versions_regex, ignorecase=true)
+        | ansible.builtin.select('ansible.builtin.match', __run_logrotate_platform_versions_regex, ignorecase=true)
         | ansible.builtin.list
       }}
   when:
@@ -151,7 +151,7 @@
 - name: "Init | Assert drop-in section names yield unique, non-empty filenames"
   ansible.builtin.assert:
     that:
-      - __run_logrotate_section_filenames | ansible.builtin.select('equalto', '') | ansible.builtin.list | ansible.builtin.length == 0
+      - __run_logrotate_section_filenames | ansible.builtin.select('ansible.builtin.equalto', '') | ansible.builtin.list | ansible.builtin.length == 0
       - (__run_logrotate_section_filenames | ansible.builtin.length)
         == (__run_logrotate_section_filenames | ansible.builtin.unique | ansible.builtin.length)
     fail_msg: >-

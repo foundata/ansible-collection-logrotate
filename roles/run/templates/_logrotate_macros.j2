@@ -7,19 +7,19 @@
                                'preremove'] -%}
 {%   if k in script_directives %}
 {{ indent }}{{ k }}
-{%     for line in (v | string | ansible.builtin.trim).splitlines() %}
+{%     for line in (v | ansible.builtin.string | ansible.builtin.trim).splitlines() %}
 {{ indent }}    {{ line }}
 {%     endfor -%}
 {{ indent }}endscript
-{%-  elif v is sameas true %}
+{%-  elif v is ansible.builtin.sameas true %}
 {{ indent }}{{ k }}
-{%-  elif v is sameas false %}
+{%-  elif v is ansible.builtin.sameas false %}
 {#   Silently skip disabled (false) directives. #}
 {%-  else %}
-{%     if v is string and '\n' in v %}
+{%     if v is ansible.builtin.string and '\n' in v %}
 {{       undef(hint='Directive "' ~ k ~ '" has a multiline value but is not a'
          ~ ' recognized script directive. Valid script directives: '
-         ~ script_directives | join(', ') ~ '. Check for typos.') }}
+         ~ script_directives | ansible.builtin.join(', ') ~ '. Check for typos.') }}
 {%     endif %}
 {{ indent }}{{ k }} {{ v }}
 {%-  endif %}
@@ -29,8 +29,8 @@
 {%- macro directives(conf, indent='', exclude=[]) -%}
 {%   for item in ((conf
                    | ansible.builtin.dict2items
-                   | ansible.builtin.rejectattr('key', 'in', exclude)
-                   | ansible.builtin.rejectattr('value', 'sameas', false)
+                   | ansible.builtin.rejectattr('key', 'ansible.builtin.in', exclude)
+                   | ansible.builtin.rejectattr('value', 'ansible.builtin.sameas', false)
                    | ansible.builtin.sort(attribute='key'))) %}
 {{ directive(item['key'], item['value'], indent) }}
 {%   endfor %}

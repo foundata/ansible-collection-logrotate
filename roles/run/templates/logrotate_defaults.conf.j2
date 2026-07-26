@@ -19,10 +19,10 @@
 {{ __run_logrotate_config_file_marker }}
 # {{ ansible_managed }}
 {%  set conf = tpl_defaults_conf | ansible.builtin.default({}) %}
-{%  set raw_content = (conf.get('content') if conf is mapping else none) %}
+{%  set raw_content = (conf.get('content') if conf is ansible.builtin.mapping else none) %}
 
-{%- if raw_content is not none %}
-{{ raw_content | string | ansible.builtin.trim }}
+{%- if raw_content is not ansible.builtin.none %}
+{{ raw_content | ansible.builtin.string | ansible.builtin.trim }}
 {%  elif (conf | ansible.builtin.length) == 0 %}
 
 # No global logrotate defaults managed by Ansible.

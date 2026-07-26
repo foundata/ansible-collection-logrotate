@@ -21,24 +21,24 @@
 {{ __run_logrotate_config_file_marker }}
 # {{ ansible_managed }}
 {%  set conf = tpl_section_conf | ansible.builtin.default({}) %}
-{%  set raw_content = (conf.get('content') if conf is mapping else none) %}
+{%  set raw_content = (conf.get('content') if conf is ansible.builtin.mapping else none) %}
 
-{%- if raw_content is not none %}
-{{ raw_content | string | ansible.builtin.trim }}
+{%- if raw_content is not ansible.builtin.none %}
+{{ raw_content | ansible.builtin.string | ansible.builtin.trim }}
 {%  else %}
 {%    set paths = conf.get('path', conf.get('paths', [])) %}
-{%    if paths is string %}
+{%    if paths is ansible.builtin.string %}
 {%      set paths = [paths] %}
 {%    endif %}
 {%    set ns = namespace(quoted_paths=[]) %}
 {%    for p in paths %}
 {%      if ' ' in p %}
 {%        set ns.quoted_paths = ns.quoted_paths
-            + [p | regex_replace('([^*?\\[\\]]+)', '"\\1"')] %}
+            + [p | ansible.builtin.regex_replace('([^*?\\[\\]]+)', '"\\1"')] %}
 {%      else %}
 {%        set ns.quoted_paths = ns.quoted_paths + [p] %}
 {%      endif %}
 {%    endfor %}
-{{ ns.quoted_paths | join(' ') }} {
+{{ ns.quoted_paths | ansible.builtin.join(' ') }} {
 {{ directives(conf, indent='  ', exclude=['path', 'paths', 'content']) }}}
 {%  endif %}
