@@ -52,9 +52,9 @@
     "{{ item['key'] }}": "{{ item['value'] }}"
   loop: >-
     {{
-      (__testing_state | default({}, true))
+      (__testing_state | ansible.builtin.default({}, true))
       | ansible.builtin.dict2items
-      | ansible.builtin.selectattr('key', 'match', '^run_logrotate_')
+      | ansible.builtin.selectattr('key', 'ansible.builtin.match', '^run_logrotate_')
       | ansible.builtin.list
     }}
 

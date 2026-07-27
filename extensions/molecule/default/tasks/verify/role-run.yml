@@ -14,9 +14,9 @@
     "{{ item['key'] }}": "{{ item['value'] }}"
   loop: >-
     {{
-      (__testing_state | default({}, true))
+      (__testing_state | ansible.builtin.default({}, true))
       | ansible.builtin.dict2items
-      | ansible.builtin.selectattr('key', 'match', '^(run_logrotate_|__testing_)')
+      | ansible.builtin.selectattr('key', 'ansible.builtin.match', '^(run_logrotate_|__testing_)')
       | ansible.builtin.list
     }}
 
@@ -172,7 +172,7 @@
       - __testing_section_logrotate_validation is ansible.builtin.success
     fail_msg: >-
       The section drop-in config file '{{ __testing_section_dropin_file_path }}' has invalid syntax.
-      Output: {{ __testing_section_logrotate_validation['stderr'] | default('') }}
+      Output: {{ __testing_section_logrotate_validation['stderr'] | ansible.builtin.default('') }}
     success_msg: >-
       The section drop-in config file '{{ __testing_section_dropin_file_path }}' has valid syntax.
 
@@ -199,7 +199,7 @@
       - __testing_logrotate_validation_result is ansible.builtin.success
     fail_msg: >-
       The logrotate configuration '{{ __run_logrotate_config_defaults_dropin_file_path }}'
-      is invalid. Output: {{ __testing_logrotate_validation_result['stderr'] | default('') }}
+      is invalid. Output: {{ __testing_logrotate_validation_result['stderr'] | ansible.builtin.default('') }}
     success_msg: >-
       The logrotate configuration '{{ __run_logrotate_config_defaults_dropin_file_path }}'
       is valid.
@@ -384,10 +384,10 @@
     - name: "Molecule | Verify | Assert timer is in expected active/enabled states"
       ansible.builtin.assert:
         that:
-          - (__testing_timer_is_enabled['stdout'] | trim) == 'enabled'
+          - (__testing_timer_is_enabled['stdout'] | ansible.builtin.trim) == 'enabled'
         fail_msg: >-
           Timer '{{ __testing_systemd_timer_unit_name }}' is not in expected state.
-          is-enabled: '{{ __testing_timer_is_enabled['stdout'] | trim }}' (rc={{ __testing_timer_is_enabled['rc'] }}, expected 'enabled')
+          is-enabled: '{{ __testing_timer_is_enabled['stdout'] | ansible.builtin.trim }}' (rc={{ __testing_timer_is_enabled['rc'] }}, expected 'enabled')
         success_msg: >-
           Timer '{{ __testing_systemd_timer_unit_name }}' is 'enabled'.
 
@@ -612,7 +612,9 @@
 
 - name: "Molecule | Verify | Run timer settings rejection checks (init-only)"
   ansible.builtin.include_tasks:
-    file: "{{ (lookup('env', 'MOLECULE_SCENARIO_DIRECTORY') | ansible.builtin.default('../../default')) }}/tasks/verify/checks/timer-settings-reject.yml"
+    file: >-
+      {{ (lookup('ansible.builtin.env', 'MOLECULE_SCENARIO_DIRECTORY')
+          | ansible.builtin.default('../../default')) }}/tasks/verify/checks/timer-settings-reject.yml
   vars:
     __testing_reject_case: "{{ item }}"
   loop:
