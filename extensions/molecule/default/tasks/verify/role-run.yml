@@ -947,3 +947,78 @@
       The role's init did not gather ansible_facts['service_mgr'] although the config
       tasks gate on it. Under reduced fact sets the timer handling would fail.
     success_msg: "The role's init gathers service_mgr itself under reduced fact sets."
+
+
+## Uninstall (state "absent") verification
+#
+# This block stays the LAST one in the verify stage: it converges the
+# instances away from the state every earlier check relies on. It is
+# deliberately not part of the cleanup stage - cleanup also runs when an
+# earlier stage fails (on arbitrary state) and has to stay assertion-free.
+
+# Simulate a drop-in whose name can no longer be derived from the current
+# variables (a section renamed or de-listed since deployment). It carries
+# the role's ownership marker, so the uninstall has to find it via the
+# marker sweep of the drop-in directory.
+- name: "Molecule | Verify | Uninstall: plant a historical role-managed drop-in"
+  ansible.builtin.copy:
+    dest: "/etc/logrotate.d/renamed-historical"
+    content: |
+      # Managed by Ansible (foundata.logrotate.run)
+      /var/log/historical/*.log {
+        rotate 1
+      }
+    owner: "root"
+    group: "root"
+    mode: "u=rw,g=r,o=r"
+
+
+# An administrator's own drop-in (no ownership marker): the sweep must leave
+# it alone even though it lives in the managed directory.
+- name: "Molecule | Verify | Uninstall: plant an administrator-owned drop-in without the marker"
+  ansible.builtin.copy:
+    dest: "/etc/logrotate.d/admin-own"
+    content: |
+      # hand-made by the administrator, not Ansible
+      /var/log/admin/*.log {
+        rotate 1
+      }
+    owner: "root"
+    group: "root"
+    mode: "u=rw,g=r,o=r"
+
+
+- name: "Molecule | Verify | Uninstall: run the role with state 'absent'"
+  ansible.builtin.include_role:
+    name: "foundata.logrotate.run"
+  vars:
+    run_logrotate_state: "absent"
+    run_logrotate_config_defaults_dropin_file_name: "00-custom-dropin-defaults"
+
+
+- name: "Molecule | Verify | Uninstall: check the role-managed files are gone"
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  register: __testing_uninstall_gone_stat
+  failed_when:
+    - __testing_uninstall_gone_stat['stat']['exists']
+  loop:
+    - "/etc/logrotate.d/00-custom-dropin-defaults"
+    - "/etc/logrotate.d/00-defaults"
+    - "/etc/logrotate.d/foo-bar"
+    - "/etc/logrotate.d/renamed-historical"
+    - "{{ __run_logrotate_systemd_timer_unit_dropin_file_path }}"
+
+
+- name: "Molecule | Verify | Uninstall: check the administrator's drop-in survived"
+  ansible.builtin.stat:
+    path: "/etc/logrotate.d/admin-own"
+  register: __testing_uninstall_admin_stat
+  failed_when:
+    - not __testing_uninstall_admin_stat['stat']['exists']
+
+
+- name: "Molecule | Verify | Uninstall: remove the administrator-owned test file"
+  ansible.builtin.file:
+    path: "/etc/logrotate.d/admin-own"
+    state: "absent"
