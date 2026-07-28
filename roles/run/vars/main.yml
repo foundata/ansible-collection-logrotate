@@ -184,7 +184,6 @@ __run_logrotate_grep_exec_path: "/usr/bin/grep"
 
 # systemd logrotate timer (helpful: systemctl cat logrotate.timer)
 __run_logrotate_systemd_timer_unit_name: "logrotate.timer"
-__run_logrotate_systemd_timer_unit_file_path: "/usr/lib/systemd/system/logrotate.timer" # hint to determine the path: systemctl cat logrotate.timer
 
 __run_logrotate_systemd_timer_unit_dropin_dir_path: "/etc/systemd/system/{{ __run_logrotate_systemd_timer_unit_name }}.d"
 __run_logrotate_systemd_timer_unit_dropin_dir_owner: "{{ __run_logrotate_config_file_owner }}"

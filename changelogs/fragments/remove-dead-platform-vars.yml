@@ -1,0 +1,11 @@
+---
+
+trivial:
+  - >
+    ``run`` role - Removed dead code around the systemd timer unit file path:
+    the internal ``__run_logrotate_systemd_timer_unit_file_path`` variable was
+    referenced nowhere (the role manages the timer via its unit name and an
+    ``/etc/systemd/system/`` drop-in only), and the two platform variable files
+    overriding it were named ``debian12.yml``/``ubuntu2204.yml`` and therefore
+    never matched the ``debian_12.yml``/``ubuntu_22.yml`` names the platform
+    dispatch looks for.
