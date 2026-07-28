@@ -101,6 +101,10 @@ argument_specs:
           If a non-default filename is used, any existing
           `<config dir>/logrotate.d/00-defaults` from previous Ansible runs will be
           removed automatically to prevent conflicts.
+
+          Has to be a plain filename, starting with an alphanumeric character and
+          containing only characters from `A-Za-z0-9._-` (no path separators); the
+          role fails during initialization otherwise.
         type: "str"
         default: "00-defaults"
 

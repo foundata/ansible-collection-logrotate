@@ -1,0 +1,9 @@
+---
+
+security_fixes:
+  - >
+    ``run`` role - ``run_logrotate_config_defaults_dropin_file_name`` is now
+    validated to be a plain filename. A value containing path separators (such
+    as ``../logrotate.conf``) could previously make the role write to or remove
+    files outside of the ``logrotate.d`` configuration directory with root
+    privileges.
