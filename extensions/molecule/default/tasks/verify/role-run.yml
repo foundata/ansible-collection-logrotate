@@ -974,12 +974,17 @@
 
 
 # An administrator's own drop-in (no ownership marker): the sweep must leave
-# it alone even though it lives in the managed directory.
+# it alone even though it lives in the managed directory. The content mentions
+# the marker as a substring on purpose: ownership requires the exact marker
+# line, a mere mention (e.g. quoted in a comment) must not get the file
+# deleted.
 - name: "Molecule | Verify | Uninstall: plant an administrator-owned drop-in without the marker"
   ansible.builtin.copy:
     dest: "/etc/logrotate.d/admin-own"
     content: |
-      # hand-made by the administrator, not Ansible
+      # hand-made by the administrator, not Ansible. Files containing the
+      # exact "{{ __run_logrotate_config_file_marker }}" line are role-owned;
+      # this one merely quotes that marker.
       /var/log/admin/*.log {
         rotate 1
       }

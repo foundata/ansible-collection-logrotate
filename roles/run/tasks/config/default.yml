@@ -102,7 +102,7 @@
   ansible.builtin.command:
     argv: >-
       {{
-        [__run_logrotate_grep_exec_path, '-l', '-s', '--', __run_logrotate_config_file_marker]
+        [__run_logrotate_grep_exec_path, '-l', '-s', '-x', '-F', '--', __run_logrotate_config_file_marker]
         + __run_logrotate_stale_candidates
       }}
   register: __run_logrotate_stale_result
