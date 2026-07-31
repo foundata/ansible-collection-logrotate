@@ -160,7 +160,7 @@
 - name: "Config | Default | systemd timer"
   when:
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'
-    - run_logrotate_timer_manage
+    - run_logrotate_timer_manage | ansible.builtin.bool
   block:
 
     - name: "Config | Default | systemd timer | Ensure timer override directory exists"
@@ -193,7 +193,7 @@
     state: "absent"
   when:
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'
-    - not run_logrotate_timer_manage
+    - not (run_logrotate_timer_manage | ansible.builtin.bool)
   notify:
     - "run_logrotate: systemd daemon-reload"
 
@@ -206,4 +206,4 @@
       The automatic logrotate scheduling will use the platform's defaults (e.g., cron).
   when:
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) != 'systemd'
-    - run_logrotate_timer_manage
+    - run_logrotate_timer_manage | ansible.builtin.bool

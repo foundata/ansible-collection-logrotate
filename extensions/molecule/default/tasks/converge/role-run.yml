@@ -30,7 +30,10 @@
             /usr/bin/killall -HUP foo1
             /usr/bin/killall -HUP bar2
 
-      run_logrotate_timer_manage: true
+      # A string on purpose (as delivered by "-e var=true" command line
+      # extra-vars): the role has to coerce boolean arguments, not
+      # truthiness-evaluate them.
+      run_logrotate_timer_manage: "true"
       run_logrotate_timer_settings:
         # A list renders one assignment per item after the single shared reset,
         # so this also guards that repeatable triggers are not stringified.
