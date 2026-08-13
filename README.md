@@ -1,6 +1,8 @@
 # Ansible collection: `foundata.logrotate`
 
-This repository contains the `foundata.logrotate` Ansible Collection. It provides resources to manage [logrotate](https://github.com/logrotate/logrotate), a utility is designed to simplify the administration of log files on a system which generates a lot of log files.
+This repository contains the `foundata.logrotate` Ansible Collection.
+
+It provides resources to manage [logrotate](https://github.com/logrotate/logrotate), a utility is designed to simplify the administration of log files on a system which generates a lot of log files.
 
 
 <div align="center" id="project-readme-header">
