@@ -5,7 +5,7 @@
 # Fixed paths cover files written by releases without the ownership marker.
 - name: "Setup | Uninstall | Remove drop-in config files (defaults, systemd timer)"
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ __run_logrotate_dropin_path_item }}"
     state: absent
   loop: >-
     {{
@@ -15,6 +15,8 @@
         __run_logrotate_systemd_timer_unit_dropin_file_path
       ] | ansible.builtin.unique
     }}
+  loop_control:
+    loop_var: "__run_logrotate_dropin_path_item"
 
 
 - name: "Setup | Uninstall | Find files in the drop-in config directory"
@@ -43,9 +45,11 @@
 
 - name: "Setup | Uninstall | Remove files created by this role"
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ __run_logrotate_created_path_item }}"
     state: "absent"
   loop: "{{ __run_logrotate_owned_result['stdout_lines'] | ansible.builtin.default([]) }}"
+  loop_control:
+    loop_var: "__run_logrotate_created_path_item"
 
 
 - name: "Setup | Uninstall | Remove packages"

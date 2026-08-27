@@ -62,14 +62,14 @@
   vars:
     __run_logrotate_loop_file_name: >-
       {{
-        item['key']
+        __run_logrotate_dropin_item['key']
         | ansible.builtin.lower
         | ansible.builtin.regex_replace('[^a-z0-9._]', '_')
         | ansible.builtin.regex_replace('_+', '_')
         | ansible.builtin.regex_replace('^_|_$', '')
       }}
     # Pass (and/or adjust) variables needed for the template
-    tpl_section_conf: "{{ item['value'] }}"
+    tpl_section_conf: "{{ __run_logrotate_dropin_item['value'] }}"
   loop: >-
     {{
       run_logrotate_config_sections
@@ -77,6 +77,7 @@
       | ansible.builtin.dict2items
     }}
   loop_control:
+    loop_var: "__run_logrotate_dropin_item"
     label: "{{ __run_logrotate_config_dropin_dir_path }}/{{ __run_logrotate_loop_file_name }}"
   when:
     - ((run_logrotate_config_sections | ansible.builtin.default({})) | ansible.builtin.length) > 0
@@ -123,9 +124,11 @@
 
 - name: "Config | Default | Remove stale files created by this role"
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ __run_logrotate_stale_path_item }}"
     state: "absent"
   loop: "{{ __run_logrotate_stale_result['stdout_lines'] | ansible.builtin.default([]) }}"
+  loop_control:
+    loop_var: "__run_logrotate_stale_path_item"
   notify:
     - "run_logrotate: validate configuration"
 

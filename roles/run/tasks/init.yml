@@ -122,10 +122,12 @@
   ansible.builtin.include_vars:
     file: "{{ __run_logrotate_vars_file }}"
   vars:
-    __run_logrotate_vars_file: "{{ role_path }}/vars/{{ item }}"
+    __run_logrotate_vars_file: "{{ role_path }}/vars/{{ __run_logrotate_varsfile_item }}"
   when:
     - __run_logrotate_vars_file is ansible.builtin.file
   loop: "{{ __run_logrotate_platform_filenames_most_specific_last }}"
+  loop_control:
+    loop_var: "__run_logrotate_varsfile_item"
 
 
 ### logrotate specific
@@ -133,13 +135,13 @@
 
 - name: "Init | Show effective merged variables (computed lazily in vars/main.yml)"
   ansible.builtin.debug:
-    msg: "{{ __run_logrotate_effective_var }} = {{ lookup('ansible.builtin.vars', __run_logrotate_effective_var) }}"
+    msg: "{{ __run_logrotate_effective_var_item }} = {{ lookup('ansible.builtin.vars', __run_logrotate_effective_var_item) }}"
     verbosity: 3
   loop:
     - "__run_logrotate_effective_timer_settings"
   loop_control:
-    loop_var: "__run_logrotate_effective_var"
-    label: "{{ __run_logrotate_effective_var }}"
+    loop_var: "__run_logrotate_effective_var_item"
+    label: "{{ __run_logrotate_effective_var_item }}"
 
 
 # The defaults drop-in filename gets concatenated into a path below the
