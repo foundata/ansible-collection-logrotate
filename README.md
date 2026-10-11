@@ -1,5 +1,10 @@
 # Ansible collection: `foundata.logrotate`
 
+<!--
+SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 This repository contains the `foundata.logrotate` Ansible Collection.
 
 It provides resources to manage

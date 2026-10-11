@@ -1,5 +1,10 @@
 # Ansible role: `foundata.logrotate.run`
 
+<!--
+SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansible collection). It provides automated management of [logrotate](https://github.com/logrotate/logrotate) configuration.
 
 
