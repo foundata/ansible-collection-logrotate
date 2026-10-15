@@ -13,6 +13,8 @@ argument_specs:
   # foundata.logrotate/roles/run/tasks/main.yml entry point
   main:
     short_description: "Main entry point for the foundata.logrotate.run role"
+    description: |
+      Manage the logrotate log rotation utility
     options:
 
       run_logrotate_state:

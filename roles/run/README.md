@@ -186,18 +186,20 @@ There are also tags that are generally not intended to be called directly but ar
 
 Main entry point for the foundata.logrotate.run role
 
+Manage the logrotate log rotation utility
+
 The following variables can be configured for this role:
 
-| Variable | Type | Required | Default | Description (abstract) |
-|----------|------|----------|---------|------------------------|
-| `run_logrotate_state` | `str` | No | `"present"` | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_logrotate_state) |
-| `run_logrotate_autoupgrade` | `bool` | No | `false` | If set to `true`, all managed packages will be upgraded during each Ansible run (e.g., when the package provider detects a newer version than the currently installed one). |
-| `run_logrotate_service_state` | `str` | No | `"enabled"` | Defines the status of the service(s) the role manages. For logrotate this is the systemd `logrotate.timer` unit that triggers periodic log rotation; the term "service" is used generically and also covers such timer units.<br><br>Possible […](#variable-run_logrotate_service_state) |
-| `run_logrotate_config_defaults` | `dict` | No | `{}` | Global logrotate default directives for all sections.<br><br>This dictionary defines logrotate directives that apply globally and are written to the drop-in file specified by `run_logrotate_config_defaults_dropin_file_name` in […](#variable-run_logrotate_config_defaults) |
-| `run_logrotate_config_defaults_dropin_file_name` | `str` | No | `"00-defaults"` | Filename of the drop-in configuration file placed in `/logrotate.d/` to define global defaults. Defaults to `00-defaults`. The `00-` prefix ensures the file is loaded early, allowing its settings be overridden by later configuration files.<br><br>If […](#variable-run_logrotate_config_defaults_dropin_file_name) |
-| `run_logrotate_config_sections` | `dict` | No | `{}` | Log rotation section definitions. Each section creates a drop-in configuration file in `/logrotate.d/`.<br><br>Dictionary structure:<br><br>- Keys: Section name (will create `/logrotate.d/`) - Values: Dictionary containing path(s) and rotation […](#variable-run_logrotate_config_sections) |
-| `run_logrotate_timer_manage` | `bool` | No | `true` | Controls whether the role manages the automatic logrotate scheduling.<br><br>When set to `true` (the default), the role configures the systemd timer unit for logrotate according to `run_logrotate_timer_settings`.<br><br>Note: This feature currently […](#variable-run_logrotate_timer_manage) |
-| `run_logrotate_timer_settings` | `dict` | No | `{}` | Configuration for the systemd timer that triggers logrotate execution. This dictionary controls when and how often logrotate runs.<br><br>These settings map to systemd timer unit directives and are applied via a drop-in override file. They take […](#variable-run_logrotate_timer_settings) |
+|                     Variable                     |  Type  | Required |     Default     | Description (abstract) |
+| ------------------------------------------------ | ------ | -------- | --------------- | ---------------------- |
+| `run_logrotate_state`                            | `str`  | No       | `"present"`     | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_logrotate_state) |
+| `run_logrotate_autoupgrade`                      | `bool` | No       | `false`         | If set to `true`, all managed packages will be upgraded during each Ansible run (e.g., when the package provider detects a newer version than the currently installed one). |
+| `run_logrotate_service_state`                    | `str`  | No       | `"enabled"`     | Defines the status of the service(s) the role manages. For logrotate this is the systemd `logrotate.timer` unit that triggers periodic log rotation; the term "service" is used generically and also covers such timer units.<br><br>Possible […](#variable-run_logrotate_service_state) |
+| `run_logrotate_config_defaults`                  | `dict` | No       | `{}`            | Global logrotate default directives for all sections.<br><br>This dictionary defines logrotate directives that apply globally and are written to the drop-in file specified by `run_logrotate_config_defaults_dropin_file_name` in […](#variable-run_logrotate_config_defaults) |
+| `run_logrotate_config_defaults_dropin_file_name` | `str`  | No       | `"00-defaults"` | Filename of the drop-in configuration file placed in `/logrotate.d/` to define global defaults. Defaults to `00-defaults`. The `00-` prefix ensures the file is loaded early, allowing its settings be overridden by later configuration files.<br><br>If […](#variable-run_logrotate_config_defaults_dropin_file_name) |
+| `run_logrotate_config_sections`                  | `dict` | No       | `{}`            | Log rotation section definitions. Each section creates a drop-in configuration file in `/logrotate.d/`.<br><br>Dictionary structure:<br><br>- Keys: Section name (will create `/logrotate.d/`) - Values: Dictionary containing path(s) and rotation […](#variable-run_logrotate_config_sections) |
+| `run_logrotate_timer_manage`                     | `bool` | No       | `true`          | Controls whether the role manages the automatic logrotate scheduling.<br><br>When set to `true` (the default), the role configures the systemd timer unit for logrotate according to `run_logrotate_timer_settings`.<br><br>Note: This feature currently […](#variable-run_logrotate_timer_manage) |
+| `run_logrotate_timer_settings`                   | `dict` | No       | `{}`            | Configuration for the systemd timer that triggers logrotate execution. This dictionary controls when and how often logrotate runs.<br><br>These settings map to systemd timer unit directives and are applied via a drop-in override file. They take […](#variable-run_logrotate_timer_settings) |
 
 ### `run_logrotate_state`<a id="variable-run_logrotate_state"></a>
 
@@ -344,7 +346,8 @@ Special cases:
 - There is a `content` key, allowing you to put raw lines for the drop-in file
   as the value without any special treatment. This is useful if you already have
   existing configuration and do not want to convert their definitions into YAML:
-  ```yaml
+
+  ````yaml
   my-complex-logrotate:
     content: |
       /var/log/app1/*.log "/var/log/app2 space/"*".log" {
@@ -377,7 +380,7 @@ my_app:
 
 will create `logrotate.d/my_app` with the content:
 
-```
+```text
 /var/log/app1/*.log "/var/log/app2 space/"*".log" {
   daily
   rotate 14
@@ -391,7 +394,7 @@ will create `logrotate.d/my_app` with the content:
     systemctl reload my-app > /dev/null 2>&1 || true
   endscript
 }
-```
+````
 
 The official documentation provides general configuration guidance:
 
@@ -448,10 +451,10 @@ Dictionary structure:
 - Keys: Standard systemd `[Timer]` directives.
 - Values: Corresponding configuration values. Common options include:
   - `OnCalendar`: Defines the schedule on which the logrotate timer is
-     triggered. Defaults to `daily`. An (at least) daily schedule is
-     recommended.
+    triggered. Defaults to `daily`. An (at least) daily schedule is
+    recommended.
   - `RandomizedDelaySec`: Adds a random delay before execution to avoid
-    simultaneous runs across systems.  Defaults to `1h`.
+    simultaneous runs across systems. Defaults to `1h`.
   - `Persistent`: Ensures missed timer runs are executed at the next boot
     if the system was powered off. Defaults to `true`. Recommended to keep
     enabled to ensure log rotation occurs even after the system was
@@ -463,11 +466,13 @@ Value contract for the six repeatable trigger directives (`OnCalendar`,
 
 - They also accept a YAML list and render one assignment per entry, so
   several expressions of the same directive can be combined:
+
   ```yaml
   OnCalendar:
     - "Mon..Fri 03:00"
     - "Sat,Sun 05:00"
   ```
+
 - An empty list drops the role's built-in default for that directive
   (e.g. to run a purely monotonic timer without a calendar schedule).
   At least one trigger must remain overall.
@@ -493,7 +498,6 @@ Only effective when `run_logrotate_timer_manage` is `true`.
 - **Type**: `dict`
 - **Required**: No
 - **Default**: `{}`
-
 
 
 
