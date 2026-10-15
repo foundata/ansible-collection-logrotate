@@ -1,3 +1,4 @@
+---
 # Execute the collection role "run" against all driver-created instances.
 #
 # SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
@@ -51,7 +52,6 @@
         OnClockChange: true
         RandomizedDelaySec: "30m"
         Persistent: false
-
 
 - name: "Molecule | Converge | Set run_logrotate* role parameters as facts from __testing_state"
   ansible.builtin.set_fact:

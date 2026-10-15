@@ -1,3 +1,4 @@
+---
 # Tasks for the Molecule prepare stage: Add resources needed for later steps
 # (e.g. verify) on all driver-created instances.
 #
@@ -14,7 +15,6 @@
   loop:
     - "/var/log/news"
     - "/var/log/news with spaces/subdir/foo"
-
 
 - name: "Molecule | Prepare | Create dummylog files"
   ansible.builtin.file:

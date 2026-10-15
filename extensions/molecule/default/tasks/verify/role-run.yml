@@ -1,3 +1,4 @@
+---
 # Check collection role "run" outcomes.
 #
 # SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
@@ -8,7 +9,6 @@
     name: "foundata.logrotate.run"
     tasks_from: "init"
     public: true
-
 
 ## Preparation
 
@@ -29,14 +29,12 @@
     __testing_section_dropin_file_path: "{{ __run_logrotate_config_dropin_dir_path }}/foo_bar"
     __testing_systemctl_exec_path: "/usr/bin/systemctl"
 
-
 ## Defaults drop-in file
 
 - name: "Molecule | Verify | Check if logrotate drop-in config file (logrotate defaults) exists"
   ansible.builtin.stat:
     path: "{{ __run_logrotate_config_defaults_dropin_file_path }}"
   register: __testing_dropin_file
-
 
 - name: "Molecule | Verify | Assert logrotate drop-in config file (logrotate defaults) exists"
   ansible.builtin.assert:
@@ -59,7 +57,6 @@
     - __run_logrotate_config_defaults_dropin_file_path != __run_logrotate_config_defaults_dropin_file_path_default
   register: __testing_dropin_file_default
 
-
 - name: "Molecule | Verify | Assert default logrotate drop-in config file (logrotate defaults) does not exists (if custom filename is used)"
   ansible.builtin.assert:
     that:
@@ -75,14 +72,12 @@
   when:
     - __run_logrotate_config_defaults_dropin_file_path != __run_logrotate_config_defaults_dropin_file_path_default
 
-
 ## Custom drop-in file
 
 - name: "Molecule | Verify | Check if section drop-in config file exists"
   ansible.builtin.stat:
     path: "{{ __testing_section_dropin_file_path }}"
   register: __testing_section_dropin_file
-
 
 - name: "Molecule | Verify | Assert section drop-in config file exists"
   ansible.builtin.assert:
@@ -98,7 +93,6 @@
   ansible.builtin.slurp:
     src: "{{ __testing_section_dropin_file_path }}"
   register: __testing_section_dropin_content
-
 
 - name: "Molecule | Verify | Set section drop-in config file content as fact"
   ansible.builtin.set_fact:
@@ -163,12 +157,12 @@
       - "{{ __run_logrotate_logrotate_exec_path }}"
       - "--debug"
       - "{{ __testing_section_dropin_file_path }}"
-  register: __testing_section_logrotate_validation
-  changed_when: false
+  changed_when:
+    - false
   failed_when:
     - __testing_section_logrotate_validation is ansible.builtin.failed
 
-
+  register: __testing_section_logrotate_validation
 - name: "Molecule | Verify | Assert section drop-in config file syntax is valid"
   ansible.builtin.assert:
     that:
@@ -189,13 +183,12 @@
       - "--debug"
       - "--verbose"
       - "{{ __run_logrotate_config_file_path }}"
-  register: __testing_logrotate_validation_result
   changed_when:
     - false
   failed_when:
     - __testing_logrotate_validation_result is ansible.builtin.failed
 
-
+  register: __testing_logrotate_validation_result
 - name: "Molecule | Verify | Assert logrotate configuration is valid"
   ansible.builtin.assert:
     that:
@@ -222,7 +215,6 @@
     __testing_stale_section_path: "{{ __run_logrotate_config_dropin_dir_path }}/molecule-stale-section"
     __testing_decoy_section_path: "{{ __run_logrotate_config_dropin_dir_path }}/molecule-admin-section"
   block:
-
     - name: "Molecule | Verify | Plant a stale marker-bearing file and a hand-made decoy"
       ansible.builtin.copy:
         content: "{{ item['content'] }}"
@@ -252,18 +244,18 @@
         name: "foundata.logrotate.run"
 
     - name: "Molecule | Verify | Flush the handlers notified by the cleanup"
-      ansible.builtin.meta: flush_handlers
+      ansible.builtin.meta: "flush_handlers"
 
     - name: "Molecule | Verify | Get the status of the planted and declared files after the re-run"
       ansible.builtin.stat:
         path: "{{ item }}"
-      register: __testing_reap_stat
       loop:
         - "{{ __testing_stale_section_path }}"
         - "{{ __testing_decoy_section_path }}"
         - "{{ __testing_section_dropin_file_path }}"
         - "{{ __run_logrotate_config_defaults_dropin_file_path }}"
 
+      register: __testing_reap_stat
     - name: "Molecule | Verify | Assert only the stale marker-bearing file was removed"
       ansible.builtin.assert:
         that:
@@ -281,7 +273,6 @@
           decoy and the declared drop-in files untouched.
 
   always:
-
     - name: "Molecule | Verify | Remove the planted files again"
       ansible.builtin.file:
         path: "{{ item }}"
@@ -289,7 +280,6 @@
       loop:
         - "{{ __testing_stale_section_path }}"
         - "{{ __testing_decoy_section_path }}"
-
 
 ## systemd timer
 
@@ -301,17 +291,14 @@
   when:
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) != 'systemd'
 
-
 - name: "Molecule | Verify | systemd timer"
   when:
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'
   block:
-
     - name: "Molecule | Verify | Set expected systemd timer parameters as facts (from __testing_state, with sensible defaults)"
       ansible.builtin.set_fact:
         __testing_systemd_timer_unit_name: "{{ __run_logrotate_systemd_timer_unit_name }}"
         __testing_systemd_timer_unit_dropin_file_path: "{{ __run_logrotate_systemd_timer_unit_dropin_file_path }}"
-
 
     - name: "Molecule | Verify | Gather systemd unit files (JSON)"
       ansible.builtin.command:
@@ -320,13 +307,12 @@
           - "list-unit-files"
           - "--all"
           - "--output=json"
-      register: __testing_systemd_unit_files_json
       changed_when:
         - false
       failed_when:
         - __testing_systemd_unit_files_json is ansible.builtin.failed
 
-
+      register: __testing_systemd_unit_files_json
     - name: "Molecule | Verify | Build systemd_facts (list of unit_file names)"
       ansible.builtin.set_fact:
         __testing_systemd_facts: >-
@@ -342,7 +328,6 @@
       ansible.builtin.debug:
         var: __testing_systemd_facts
         verbosity: 3
-
 
     - name: "Molecule | Verify | Assert timer existence expectation (systemd_facts)"
       ansible.builtin.assert:
@@ -363,27 +348,25 @@
           - "{{ __testing_systemctl_exec_path }}"
           - "is-active"
           - "{{ __testing_systemd_timer_unit_name }}"
-      register: __testing_timer_is_active
       changed_when:
         - false
       failed_when:
         - __testing_timer_is_active is ansible.builtin.failed
         - __testing_timer_is_active['rc'] != 3 # inactive, installed but not running (not an error)
 
-
+      register: __testing_timer_is_active
     - name: "Molecule | Verify | Check timer enabled state (systemctl is-enabled)"
       ansible.builtin.command:
         argv:
           - "{{ __testing_systemctl_exec_path }}"
           - "is-enabled"
           - "{{ __testing_systemd_timer_unit_name }}"
-      register: __testing_timer_is_enabled
       changed_when:
         - false
       failed_when:
         - __testing_timer_is_enabled is ansible.builtin.failed
 
-
+      register: __testing_timer_is_enabled
     - name: "Molecule | Verify | Assert timer is in expected active/enabled states"
       ansible.builtin.assert:
         that:
@@ -402,7 +385,6 @@
         path: "{{ __testing_systemd_timer_unit_dropin_file_path }}"
       register: __testing_systemd_timer_unit_dropin_file
 
-
     - name: "Molecule | Verify | Assert systemd timer drop-in config file exists"
       ansible.builtin.assert:
         that:
@@ -417,7 +399,6 @@
       ansible.builtin.slurp:
         src: "{{ __testing_systemd_timer_unit_dropin_file_path }}"
       register: __testing_systemd_timer_unit_dropin_content
-
 
     - name: "Molecule | Verify | Set systemd timer drop-in config file content as fact"
       ansible.builtin.set_fact:
@@ -495,12 +476,12 @@
           - "{{ __testing_systemctl_exec_path }}"
           - "cat"
           - "{{ __testing_systemd_timer_unit_name }}"
-      register: __testing_systemd_timer_unit_validation
-      changed_when: false
+      changed_when:
+        - false
       failed_when:
         - __testing_systemd_timer_unit_validation is ansible.builtin.failed
 
-
+      register: __testing_systemd_timer_unit_validation
     - name: "Molecule | Verify | Assert systemd timer drop-in contains expected directives"
       ansible.builtin.assert:
         that:
@@ -536,10 +517,10 @@
           - "--property=TimersMonotonic"
           - "--property=OnClockChange"
           - "{{ __testing_systemd_timer_unit_name }}"
+      changed_when:
+        - false
+
       register: __testing_systemd_timer_calendar
-      changed_when: false
-
-
     - name: "Molecule | Verify | Assert the timer drop-in replaces the vendor schedule instead of accumulating"
       ansible.builtin.assert:
         that:
@@ -579,20 +560,17 @@
 
 - name: "Molecule | Verify | Validate effective timer settings merge (init-only)"
   block:
-
     - name: "Molecule | Verify | Set custom timer settings for the merge check"
       ansible.builtin.set_fact:
         run_logrotate_timer_settings:
           RandomizedDelaySec: "13m"
           FooDirective: "bar"
 
-
     - name: "Molecule | Verify | Re-initialize logrotate with custom timer settings"
       ansible.builtin.include_role:
         name: "foundata.logrotate.run"
         tasks_from: "init"
         public: true
-
 
     - name: "Molecule | Verify | Assert effective timer settings merged correctly"
       ansible.builtin.assert:
@@ -603,7 +581,6 @@
           - __run_logrotate_effective_timer_settings['FooDirective'] == "bar"
         fail_msg: "__run_logrotate_effective_timer_settings did not merge defaults and user values as expected."
         success_msg: "__run_logrotate_effective_timer_settings merged defaults and user values correctly."
-
 
 ## Timer settings validation (init-only)
 #
@@ -658,7 +635,6 @@
   loop_control:
     label: "{{ item['label'] }}"
 
-
 - name: "Molecule | Verify | Timer settings: apply an empty-list removal with a monotonic trigger"
   ansible.builtin.set_fact:
     __testing_timer_settings_saved: "{{ run_logrotate_timer_settings | ansible.builtin.default({}) }}"
@@ -666,12 +642,10 @@
       OnCalendar: []
       OnBootSec: "10min"
 
-
 - name: "Molecule | Verify | Timer settings: include the role's init (must accept the removal)"
   ansible.builtin.include_role:
     name: "foundata.logrotate.run"
     tasks_from: "init"
-
 
 - name: "Molecule | Verify | Timer settings: assert the removal reached the effective settings"
   ansible.builtin.assert:
@@ -690,7 +664,6 @@
   ansible.builtin.set_fact:
     run_logrotate_timer_settings: "{{ __testing_timer_settings_saved }}"
 
-
 - name: "Molecule | Verify | Timer settings: apply an event-only configuration"
   ansible.builtin.set_fact:
     __testing_timer_settings_saved: "{{ run_logrotate_timer_settings | ansible.builtin.default({}) }}"
@@ -698,12 +671,10 @@
       OnCalendar: []
       OnClockChange: true
 
-
 - name: "Molecule | Verify | Timer settings: include the role's init (must accept the event-only timer)"
   ansible.builtin.include_role:
     name: "foundata.logrotate.run"
     tasks_from: "init"
-
 
 - name: "Molecule | Verify | Timer settings: assert the event-only configuration reached the effective settings"
   ansible.builtin.assert:
@@ -722,7 +693,6 @@
   ansible.builtin.set_fact:
     run_logrotate_timer_settings: "{{ __testing_timer_settings_saved }}"
 
-
 ## Timer settings: event-only timer applied to the system (integration)
 #
 # The init-only positive case above proves acceptance, but not the rendered
@@ -739,25 +709,19 @@
       OnCalendar: []
       OnClockChange: true
 
-
 - name: "Molecule | Verify | Timer settings | event-only integration: apply the role"
   ansible.builtin.include_role:
     name: "foundata.logrotate.run"
 
-
 - name: "Molecule | Verify | Timer settings | event-only integration: run pending handlers (daemon-reload)"
-  ansible.builtin.meta: flush_handlers
-
+  ansible.builtin.meta: "flush_handlers"
 
 - name: "Molecule | Verify | Timer settings | event-only integration: read the rendered drop-in"
   ansible.builtin.slurp:
     src: "{{ __run_logrotate_systemd_timer_unit_dropin_file_path }}"
   register: __testing_timer_eventonly_dropin
 
-
 - name: "Molecule | Verify | Timer settings | event-only integration: assert the rendered drop-in"
-  vars:
-    __testing_timer_eventonly_decoded: "{{ __testing_timer_eventonly_dropin['content'] | ansible.builtin.b64decode }}"
   ansible.builtin.assert:
     that:
       # exactly the single shared reset, no calendar or monotonic assignment
@@ -767,7 +731,7 @@
       - >-
         (__testing_timer_eventonly_decoded
          | ansible.builtin.regex_findall('(?m)^On\w+=.+$')
-         | ansible.builtin.reject('match', '^OnClockChange=')
+         | ansible.builtin.reject('ansible.builtin.match', '^OnClockChange=')
          | ansible.builtin.list | ansible.builtin.length) == 0
       - "'OnClockChange=true' in __testing_timer_eventonly_decoded"
     fail_msg: >-
@@ -775,7 +739,8 @@
       event trigger, nothing else. Actual content: {{ __testing_timer_eventonly_decoded }}
     success_msg: "The event-only drop-in carries the single reset and the event trigger."
 
-
+  vars:
+    __testing_timer_eventonly_decoded: "{{ __testing_timer_eventonly_dropin['content'] | ansible.builtin.b64decode }}"
 - name: "Molecule | Verify | Timer settings | event-only integration: get the parsed unit properties"
   ansible.builtin.command:
     argv:
@@ -785,11 +750,10 @@
       - "--property=TimersMonotonic"
       - "--property=OnClockChange"
       - "{{ __run_logrotate_systemd_timer_unit_name }}"
-  register: __testing_timer_eventonly_props
   changed_when:
     - false
 
-
+  register: __testing_timer_eventonly_props
 - name: "Molecule | Verify | Timer settings | event-only integration: assert the effective unit state"
   ansible.builtin.assert:
     that:
@@ -805,20 +769,16 @@
       lists, active OnClockChange). Got: {{ __testing_timer_eventonly_props['stdout'] }}
     success_msg: "The event-only timer is effective: empty trigger lists, OnClockChange active."
 
-
 - name: "Molecule | Verify | Timer settings | event-only integration: restore the saved settings"
   ansible.builtin.set_fact:
     run_logrotate_timer_settings: "{{ __testing_timer_settings_saved }}"
-
 
 - name: "Molecule | Verify | Timer settings | event-only integration: re-apply the role with the restored settings"
   ansible.builtin.include_role:
     name: "foundata.logrotate.run"
 
-
 - name: "Molecule | Verify | Timer settings | event-only integration: run pending handlers again"
-  ansible.builtin.meta: flush_handlers
-
+  ansible.builtin.meta: "flush_handlers"
 
 ## Timer settings: triggerless settings accepted while the timer is unmanaged
 #
@@ -834,12 +794,10 @@
       OnCalendar: []
     run_logrotate_timer_manage: false
 
-
 - name: "Molecule | Verify | Timer settings | unmanaged: include the role's init (must accept triggerless settings)"
   ansible.builtin.include_role:
     name: "foundata.logrotate.run"
     tasks_from: "init"
-
 
 - name: "Molecule | Verify | Timer settings | unmanaged: assert the triggerless settings were in effect"
   ansible.builtin.assert:
@@ -883,7 +841,6 @@
   vars:
     ansible_facts: "{{ __testing_facts_override }}"
 
-
 - name: "Molecule | Verify | Timer settings | non-systemd: assert the triggerless settings were in effect"
   ansible.builtin.assert:
     that:
@@ -900,7 +857,6 @@
   ansible.builtin.set_fact:
     run_logrotate_timer_settings: "{{ __testing_timer_settings_saved }}"
 
-
 ## Reduced fact sets: init must gather service_mgr itself
 #
 # The config tasks gate the whole timer handling on
@@ -914,8 +870,7 @@
 # but any later task relying on gathered facts would have to re-gather them.
 
 - name: "Molecule | Verify | Reduced facts: clear the gathered facts of the host"
-  ansible.builtin.meta: clear_facts
-
+  ansible.builtin.meta: "clear_facts"
 
 - name: "Molecule | Verify | Reduced facts: gather distribution facts only (no min set)"
   ansible.builtin.setup:
@@ -923,7 +878,6 @@
       - "!all"
       - "!min"
       - "distribution"
-
 
 - name: "Molecule | Verify | Reduced facts: assert service_mgr is not known yet"
   ansible.builtin.assert:
@@ -934,12 +888,10 @@
       gather, so this check cannot prove anything. Adjust the gather_subset.
     success_msg: "service_mgr is absent after a distribution-only gather."
 
-
 - name: "Molecule | Verify | Reduced facts: include the role's init"
   ansible.builtin.include_role:
     name: "foundata.logrotate.run"
     tasks_from: "init"
-
 
 - name: "Molecule | Verify | Reduced facts: assert the role gathered service_mgr itself"
   ansible.builtin.assert:
@@ -950,7 +902,6 @@
       The role's init did not gather ansible_facts['service_mgr'] although the config
       tasks gate on it. Under reduced fact sets the timer handling would fail.
     success_msg: "The role's init gathers service_mgr itself under reduced fact sets."
-
 
 ## Uninstall (state "absent") verification
 #
@@ -973,10 +924,7 @@
       }
     owner: "root"
     group: "root"
-    mode: "u=rw,g=r,o=r"
-
-
-# An administrator's own drop-in (no ownership marker): the sweep must leave
+    mode: "u=rw,g=r,o=r" # 0644; An administrator's own drop-in (no ownership marker): the sweep must leave
 # it alone even though it lives in the managed directory. The content mentions
 # the marker as a substring on purpose: ownership requires the exact marker
 # line, a mere mention (e.g. quoted in a comment) must not get the file
@@ -993,9 +941,7 @@
       }
     owner: "root"
     group: "root"
-    mode: "u=rw,g=r,o=r"
-
-
+    mode: "u=rw,g=r,o=r" # 0644
 - name: "Molecule | Verify | Uninstall: run the role with state 'absent'"
   ansible.builtin.include_role:
     name: "foundata.logrotate.run"
@@ -1003,11 +949,9 @@
     run_logrotate_state: "absent"
     run_logrotate_config_defaults_dropin_file_name: "00-custom-dropin-defaults"
 
-
 - name: "Molecule | Verify | Uninstall: check the role-managed files are gone"
   ansible.builtin.stat:
     path: "{{ item }}"
-  register: __testing_uninstall_gone_stat
   failed_when:
     - __testing_uninstall_gone_stat['stat']['exists']
   loop:
@@ -1017,15 +961,14 @@
     - "/etc/logrotate.d/renamed-historical"
     - "{{ __run_logrotate_systemd_timer_unit_dropin_file_path }}"
 
-
+  register: __testing_uninstall_gone_stat
 - name: "Molecule | Verify | Uninstall: check the administrator's drop-in survived"
   ansible.builtin.stat:
     path: "/etc/logrotate.d/admin-own"
-  register: __testing_uninstall_admin_stat
   failed_when:
     - not __testing_uninstall_admin_stat['stat']['exists']
 
-
+  register: __testing_uninstall_admin_stat
 - name: "Molecule | Verify | Uninstall: remove the administrator-owned test file"
   ansible.builtin.file:
     path: "/etc/logrotate.d/admin-own"
