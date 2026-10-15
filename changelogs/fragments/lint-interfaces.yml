@@ -1,0 +1,11 @@
+---
+minor_changes:
+  - >-
+    Add role-prefixed handler topics and use them for internal notifications.
+    Retain the previous topics as migration aliases until version 2.0.0.
+  - >-
+    Add the handler topic run_logrotate_validate_configuration
+    as the replacement for "run_logrotate: validate configuration".
+  - >-
+    Add the handler topic run_logrotate_reload_systemd_daemon
+    as the replacement for "run_logrotate: systemd daemon-reload".

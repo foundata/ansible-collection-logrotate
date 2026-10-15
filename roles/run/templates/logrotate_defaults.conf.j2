@@ -19,8 +19,8 @@ SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 -#}
 {%- from '_logrotate_macros.j2' import directives -%}
-{{ __run_logrotate_config_file_marker }}
-# {{ ansible_managed }}
+{{ tpl_config_file_marker }}
+# {{ tpl_managed }}
 {%  set conf = tpl_defaults_conf | ansible.builtin.default({}) %}
 {%  set raw_content = (conf.get('content') if conf is ansible.builtin.mapping else none) %}
 

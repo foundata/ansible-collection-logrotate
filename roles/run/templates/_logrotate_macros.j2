@@ -21,7 +21,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 {#   Silently skip disabled (false) directives. #}
 {%-  else %}
 {%     if v is ansible.builtin.string and '\n' in v %}
-{{       undef(hint='Directive "' ~ k ~ '" has a multiline value but is not a'
+{{       {}['invalid_directive'] | ansible.builtin.mandatory(msg='Directive "' ~ k ~ '" has a multiline value but is not a'
          ~ ' recognized script directive. Valid script directives: '
          ~ script_directives | ansible.builtin.join(', ') ~ '. Check for typos.') }}
 {%     endif %}

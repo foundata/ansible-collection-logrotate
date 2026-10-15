@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 ---
-
 - name: "Config | Default | Ensure main config file exists with proper permissions"
   ansible.builtin.file:
     path: "{{ __run_logrotate_config_file_path }}"
@@ -15,7 +14,6 @@
     access_time: "preserve"
     modification_time: "preserve"
 
-
 - name: "Config | Default | Ensure drop-in config directory exists with proper permissions"
   ansible.builtin.file:
     path: "{{ __run_logrotate_config_dropin_dir_path }}"
@@ -24,8 +22,7 @@
     group: "{{ __run_logrotate_config_dropin_dir_group }}"
     mode: "{{ __run_logrotate_config_dropin_dir_mode }}"
   notify:
-    - "run_logrotate: validate configuration"
-
+    - "run_logrotate_validate_configuration"
 
 ## Defaults drop-in
 
@@ -39,9 +36,10 @@
   vars:
     # Pass (and/or adjust) variables needed for the template
     tpl_defaults_conf: "{{ run_logrotate_config_defaults }}"
+    tpl_config_file_marker: "{{ __run_logrotate_config_file_marker }}"
+    tpl_managed: "{{ ansible_managed }}"
   notify:
-    - "run_logrotate: validate configuration"
-
+    - "run_logrotate_validate_configuration"
 
 - name: "Config | Default | Remove role's default drop-in config file (logrotate defaults) (if custom filename is used)"
   ansible.builtin.file:
@@ -50,8 +48,7 @@
   when:
     - __run_logrotate_config_defaults_dropin_file_path != __run_logrotate_config_defaults_dropin_file_path_default
   notify:
-    - "run_logrotate: validate configuration"
-
+    - "run_logrotate_validate_configuration"
 
 ## User define app-specific sections, additional drop-in files
 
@@ -73,6 +70,10 @@
       }}
     # Pass (and/or adjust) variables needed for the template
     tpl_section_conf: "{{ __run_logrotate_dropin_item['value'] }}"
+    tpl_config_file_marker: "{{ __run_logrotate_config_file_marker }}"
+    tpl_managed: "{{ ansible_managed }}"
+  when:
+    - ((run_logrotate_config_sections | ansible.builtin.default({})) | ansible.builtin.length) > 0
   loop: >-
     {{
       run_logrotate_config_sections
@@ -82,11 +83,8 @@
   loop_control:
     loop_var: "__run_logrotate_dropin_item"
     label: "{{ __run_logrotate_config_dropin_dir_path }}/{{ __run_logrotate_loop_file_name }}"
-  when:
-    - ((run_logrotate_config_sections | ansible.builtin.default({})) | ansible.builtin.length) > 0
   notify:
-    - "run_logrotate: validate configuration"
-
+    - "run_logrotate_validate_configuration"
 
 ## Cleanup: reap files this role created for keys or filenames that were
 ## renamed or removed. Ownership is proven by the marker line the templates
@@ -101,7 +99,6 @@
     hidden: true
   register: __run_logrotate_find_result
 
-
 - name: "Config | Default | Determine stale files created by this role"
   ansible.builtin.command:
     argv: >-
@@ -109,10 +106,6 @@
         [__run_logrotate_grep_exec_path, '-l', '-s', '-x', '-F', '--', __run_logrotate_config_file_marker]
         + __run_logrotate_stale_candidates
       }}
-  register: __run_logrotate_stale_result
-  changed_when: false
-  failed_when:
-    - __run_logrotate_stale_result['rc'] not in [0, 1, 2]
   vars:
     __run_logrotate_stale_candidates: >-
       {{
@@ -124,7 +117,11 @@
   when:
     - (__run_logrotate_stale_candidates | ansible.builtin.length) > 0
 
-
+  changed_when:
+    - false
+  failed_when:
+    - __run_logrotate_stale_result['rc'] not in [0, 1, 2]
+  register: __run_logrotate_stale_result
 - name: "Config | Default | Remove stale files created by this role"
   ansible.builtin.file:
     path: "{{ __run_logrotate_stale_path_item }}"
@@ -133,8 +130,7 @@
   loop_control:
     loop_var: "__run_logrotate_stale_path_item"
   notify:
-    - "run_logrotate: validate configuration"
-
+    - "run_logrotate_validate_configuration"
 
 - name: "Config | Default | Ensure 'Include' directive exists in main service config file"
   ansible.builtin.lineinfile:
@@ -158,8 +154,7 @@
     #   - systemctl cat logrotate.timer
     - (ansible_facts['distribution'] | ansible.builtin.regex_replace(' ', '_') | ansible.builtin.lower) != 'opensuse_leap'
   notify:
-    - "run_logrotate: validate configuration"
-
+    - "run_logrotate_validate_configuration"
 
 ## systemd timer
 
@@ -168,7 +163,6 @@
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'
     - run_logrotate_timer_manage | ansible.builtin.bool
   block:
-
     - name: "Config | Default | systemd timer | Ensure timer override directory exists"
       ansible.builtin.file:
         path: "/etc/systemd/system/{{ __run_logrotate_systemd_timer_unit_name }}.d"
@@ -177,7 +171,7 @@
         group: "{{ __run_logrotate_systemd_timer_unit_dropin_dir_group }}"
         mode: "{{ __run_logrotate_systemd_timer_unit_dropin_dir_mode }}"
       notify:
-        - "run_logrotate: systemd daemon-reload"
+        - "run_logrotate_reload_systemd_daemon"
 
     - name: "Config | Default | systemd timer | Create drop-in config file"
       ansible.builtin.template:
@@ -189,9 +183,9 @@
       vars:
         # Pass (and/or adjust) variables needed for the template
         tpl_timer_settings: "{{ __run_logrotate_effective_timer_settings }}"
+        tpl_managed: "{{ ansible_managed }}"
       notify:
-        - "run_logrotate: systemd daemon-reload"
-
+        - "run_logrotate_reload_systemd_daemon"
 
 - name: "Config | Default | Remove managed systemd timer drop-in when timer management is disabled"
   ansible.builtin.file:
@@ -201,8 +195,7 @@
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) == 'systemd'
     - not (run_logrotate_timer_manage | ansible.builtin.bool)
   notify:
-    - "run_logrotate: systemd daemon-reload"
-
+    - "run_logrotate_reload_systemd_daemon"
 
 - name: "Config | Default | Warn about unsupported service manager for timer configuration"
   ansible.builtin.debug:
@@ -210,6 +203,7 @@
       Timer management is only supported with systemd as service manager.
       The current service manager '{{ ansible_facts['service_mgr'] }}' is not supported.
       The automatic logrotate scheduling will use the platform's defaults (e.g., cron).
+    verbosity: 0
   when:
     - (ansible_facts['service_mgr'] | ansible.builtin.lower) != 'systemd'
     - run_logrotate_timer_manage | ansible.builtin.bool
