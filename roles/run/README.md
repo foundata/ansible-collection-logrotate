@@ -5,8 +5,9 @@ SPDX-FileCopyrightText: foundata GmbH <https://foundata.com>
 SPDX-License-Identifier: GPL-3.0-or-later
 -->
 
-The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansible collection). It provides automated management of [logrotate](https://github.com/logrotate/logrotate) configuration.
-
+The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate`
+Ansible collection). It provides automated management of
+[logrotate](https://github.com/logrotate/logrotate) configuration.
 
 
 
@@ -33,18 +34,20 @@ The `foundata.logrotate.run` Ansible role (part of the `foundata.logrotate` Ansi
 
 ## Features<a id="features"></a>
 
-* Preserve distribution defaults by managing only drop-in configuration files in `/etc/logrotate.d/`:
-  * ensuring compatibility across a wide range of distributions
-  * including openSUSE-specific behavior.
-* Simple rule definition:
-  * Optional baseline defaults
-  * Log rotation with a simple dictionary per application.
+- Preserve distribution defaults by managing only drop-in configuration files in
+  `/etc/logrotate.d/`:
+  - ensuring compatibility across a wide range of distributions
+  - including openSUSE-specific behavior.
+- Simple rule definition:
+  - Optional baseline defaults
+  - Log rotation with a simple dictionary per application.
 
 
 
 ## Example playbooks, using this role<a id="examples"></a>
 
-Basic installation with your operating system's defaults and automatic upgrade on each Ansible run:
+Basic installation with your operating system's defaults and automatic upgrade
+on each Ansible run:
 
 ```yaml
 ---
@@ -62,9 +65,10 @@ Basic installation with your operating system's defaults and automatic upgrade o
 ```
 
 
-To define global logrotate defaults and application-specific rotation rules—resulting in configurations such as:
+To define global logrotate defaults and application-specific rotation
+rules—resulting in configurations such as:
 
-```
+```text
 rotate 5
 weekly
 mail recipient@example.org
@@ -72,7 +76,7 @@ mail recipient@example.org
 
 and:
 
-```
+```text
 /var/log/my_app/*.log "/var/log/with space/"*".log" {  # Path(s) to rotate, automatic quoting preserving globs
     daily                   # Rotation frequency
     rotate 14               # Keep 14 rotated files
@@ -128,7 +132,8 @@ the following playbook can be used:
               systemctl reload my_app > /dev/null 2>&1 || true
 ```
 
-Customizing the systemd timer that triggers logrotate (e.g. changing the schedule or randomized delay):
+Customizing the systemd timer that triggers logrotate (e.g. changing the
+schedule or randomized delay):
 
 ```yaml
 ---
@@ -172,12 +177,16 @@ Uninstall:
 
 It might be useful and faster to only call parts of the role by using tags:
 
-- `run_logrotate_setup`: Manage basic resources, such as packages or service users.
-- `run_logrotate_config`: Manage settings, such as adapting or creating configuration files.
+- `run_logrotate_setup`: Manage basic resources, such as packages or service
+  users.
+- `run_logrotate_config`: Manage settings, such as adapting or creating
+  configuration files.
 
-There are also tags that are generally not intended to be called directly but are included for completeness and to cover edge cases:
+There are also tags that are generally not intended to be called directly but
+are included for completeness and to cover edge cases:
 
-- `run_logrotate_always`, `always`: Tasks needed by the role itself for internal role setup and the Ansible environment.
+- `run_logrotate_always`, `always`: Tasks needed by the role itself for internal
+  role setup and the Ansible environment.
 
 
 <!-- ANSIBLE DOCSMITH MAIN START -->
@@ -511,7 +520,8 @@ See `dependencies` in [`meta/main.yml`](./meta/main.yml).
 
 ## Compatibility<a id="compatibility"></a>
 
-See `min_ansible_version` in [`meta/main.yml`](./meta/main.yml) and `__run_logrotate_supported_platforms` in [`vars/main.yml`](./vars/main.yml).
+See `min_ansible_version` in [`meta/main.yml`](./meta/main.yml) and
+`__run_logrotate_supported_platforms` in [`vars/main.yml`](./vars/main.yml).
 
 
 
