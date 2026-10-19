@@ -356,7 +356,7 @@ Special cases:
   as the value without any special treatment. This is useful if you already have
   existing configuration and do not want to convert their definitions into YAML:
 
-  ````yaml
+  ```yaml
   my-complex-logrotate:
     content: |
       /var/log/app1/*.log "/var/log/app2 space/"*".log" {
@@ -367,6 +367,7 @@ Special cases:
           systemctl reload my-app > /dev/null 2>&1 || true
         endscript
       }
+  ```
 
 Example:
 
@@ -403,7 +404,7 @@ will create `logrotate.d/my_app` with the content:
     systemctl reload my-app > /dev/null 2>&1 || true
   endscript
 }
-````
+```
 
 The official documentation provides general configuration guidance:
 

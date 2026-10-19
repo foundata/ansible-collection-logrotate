@@ -148,6 +148,7 @@ argument_specs:
                     systemctl reload my-app > /dev/null 2>&1 || true
                   endscript
                 }
+            ```
 
           Example:
 
