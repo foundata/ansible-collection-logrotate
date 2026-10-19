@@ -193,7 +193,7 @@ are included for completeness and to cover edge cases:
 
 ## Role variables<a id="variables"></a>
 
-Main entry point for the foundata.logrotate.run role
+Main entry point for the foundata.logrotate.run role.
 
 Manage the logrotate log rotation utility
 
@@ -202,7 +202,7 @@ The following variables can be configured for this role:
 |                     Variable                     |  Type  | Required |     Default     | Description (abstract) |
 | ------------------------------------------------ | ------ | -------- | --------------- | ---------------------- |
 | `run_logrotate_state`                            | `str`  | No       | `"present"`     | Determines whether the managed resources should be `present` or `absent`.<br><br>`present` ensures that required components, such as software packages, are installed and configured.<br><br>`absent` reverts changes as much as possible, such as […](#variable-run_logrotate_state) |
-| `run_logrotate_autoupgrade`                      | `bool` | No       | `false`         | If set to `true`, all managed packages will be upgraded during each Ansible run (e.g., when the package provider detects a newer version than the currently installed one). |
+| `run_logrotate_autoupgrade`                      | `bool` | No       | `false`         | If set to `true`, each Ansible run upgrades the managed packages to the newest version the package provider offers. |
 | `run_logrotate_service_state`                    | `str`  | No       | `"enabled"`     | Defines the status of the service(s) the role manages. For logrotate this is the systemd `logrotate.timer` unit that triggers periodic log rotation; the term "service" is used generically and also covers such timer units.<br><br>Possible […](#variable-run_logrotate_service_state) |
 | `run_logrotate_config_defaults`                  | `dict` | No       | `{}`            | Global logrotate default directives for all sections.<br><br>This dictionary defines logrotate directives that apply globally and are written to the drop-in file specified by `run_logrotate_config_defaults_dropin_file_name` in […](#variable-run_logrotate_config_defaults) |
 | `run_logrotate_config_defaults_dropin_file_name` | `str`  | No       | `"00-defaults"` | Filename of the drop-in configuration file placed in `/logrotate.d/` to define global defaults. Defaults to `00-defaults`. The `00-` prefix ensures the file is loaded early, allowing its settings be overridden by later configuration files.<br><br>If […](#variable-run_logrotate_config_defaults_dropin_file_name) |
@@ -220,7 +220,7 @@ Determines whether the managed resources should be `present` or `absent`.
 installed and configured.
 
 `absent` reverts changes as much as possible, such as removing packages,
-deleting created users, stopping services, restoring modified settings, …
+deleting created users, stopping services and restoring modified settings.
 
 - **Type**: `str`
 - **Required**: No
@@ -233,9 +233,8 @@ deleting created users, stopping services, restoring modified settings, …
 
 [*⇑ Back to ToC ⇑*](#toc)
 
-If set to `true`, all managed packages will be upgraded during each Ansible
-run (e.g., when the package provider detects a newer version than the
-currently installed one).
+If set to `true`, each Ansible run upgrades the managed packages to the
+newest version the package provider offers.
 
 - **Type**: `bool`
 - **Required**: No
@@ -259,12 +258,11 @@ Possible values:
   This can be used to start a service on the first Ansible run without
   enabling it for boot.
 - `unmanaged`: Ansible does not manage the service at all: both the
-  running state and the boot (enablement) state are left exactly as
-  they are. This is primarily useful when services are monitored and
-  managed by systems other than Ansible.
+  running state and the boot (enablement) state are left exactly as they
+  are. This is primarily useful when services are monitored and managed
+  by systems other than Ansible.
 
-The singular form ("service") is used for simplicity. However, the defined
-status applies to all services if multiple are being managed by this role.
+The defined status applies to all services if the role manages several.
 
 Note: This is only effective on systemd-managed systems and when
 `run_logrotate_state` is `present`. It controls the timer's enablement and
