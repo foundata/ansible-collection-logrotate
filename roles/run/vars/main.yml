@@ -1,6 +1,6 @@
 # Internal role variables and values that must NOT be overridden by the user.
 #
-# Variables defined here usually dropin earlier definitions due to the high
+# Variables defined here usually override earlier definitions due to the high
 # precedence of this file. Each variable should have a concise comment above
 # it, describing its purpose and how it fits into the role's functionality.
 #
