@@ -46,9 +46,8 @@ log files.
 ### Role: `foundata.logrotate.run`
 
 The primary role in this collection to configure and maintain logrotate,
-including rotation policies, schedules,compression, and related settings.
-[Its `README.md`](./roles/run/README.md) covers configuration, usage examples,
-and more:
+including rotation policies, schedules,compression, and related settings. [Its
+`README.md`](./roles/run/README.md) covers configuration and usage examples.
 
 <!-- ANSIBLE DOCSMITH TOC-FULL run START -->
 - [Ansible role: `foundata.logrotate.run`](./roles/run/README.md#ansible-role-foundatalogrotaterun)
