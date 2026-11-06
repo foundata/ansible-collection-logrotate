@@ -181,6 +181,8 @@ Run parts of the role with `--tags`:
   users.
 - `run_logrotate_config`: Manage settings, such as adapting or creating
   configuration files.
+- `run_logrotate_service`: Manage services and daemons, such as running states
+  and service boot configurations.
 
 The init tasks check the environment and prepare the role. They carry the tags
 `run_logrotate_always` and `always`, so they run with any `--tags` selection;
