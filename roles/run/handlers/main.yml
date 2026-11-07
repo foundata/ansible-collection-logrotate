@@ -18,12 +18,8 @@
   register: __run_logrotate_validation_result
   listen:
     - "run_logrotate_validate_configuration"
-    # Migration alias; remove in 2.0.0.
-    - "run_logrotate: validate configuration"
 - name: "Handlers | systemd daemon-reload"
   ansible.builtin.systemd_service:
     daemon_reload: true
   listen:
     - "run_logrotate_reload_systemd_daemon"
-    # Migration alias; remove in 2.0.0.
-    - "run_logrotate: systemd daemon-reload"
