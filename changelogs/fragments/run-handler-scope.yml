@@ -1,0 +1,7 @@
+---
+bugfixes:
+  - >-
+    run role - Reload systemd directly before managing the timer instead of
+    flushing all pending play handlers, preserving the order of unrelated
+    handlers of the calling play. The configuration validation now runs with
+    the other handlers at the end of the play.
