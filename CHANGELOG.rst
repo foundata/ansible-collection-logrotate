@@ -4,6 +4,19 @@ foundata.logrotate Ansible collection Release Notes
 
 .. contents:: Topics
 
+v1.5.1
+======
+
+Minor Changes
+-------------
+
+- Remove the previous handler topics ahead of the announced version 2.0.0: "run_logrotate: validate configuration" and "run_logrotate: systemd daemon-reload". Notify the role-prefixed topics instead. We decided that this is a non-breaking change: the topics are role internals, and their use by third parties is very unlikely.
+
+Bugfixes
+--------
+
+- run role - Reload systemd directly before managing the timer instead of flushing all pending play handlers, preserving the order of unrelated handlers of the calling play. The configuration validation now runs with the other handlers at the end of the play.
+
 v1.5.0
 ======
 
